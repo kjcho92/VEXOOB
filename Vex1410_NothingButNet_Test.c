@@ -106,8 +106,11 @@ enum {
 	AutonomousMode = 20,
   AutonomousModeShort = 21,
 
+  Skill = 22,
+
   WarmUP = 30,
   WarmUP2 = 31,
+  
   Test = 99,
   MidBeltPower = 100,
 };
@@ -150,6 +153,34 @@ task autonomous()
 }
 
 task launchBall()
+{
+	LauncherRange = AutonomousMode;
+	BeltSpeed = AutonomousMode;
+
+	StartTask(startLauncher);
+	wait1Msec(1000);
+
+	StartTask(startBelt);
+	StartTask(startMidBelt);
+
+}
+
+
+task launchBall_Skill()
+{
+	LauncherRange = Skill;
+	BeltSpeed = Skill;
+
+	StartTask(startLauncher);
+	wait1Msec(1000);
+
+	StartTask(startBelt);
+	StartTask(startMidBelt);
+
+}
+
+
+task launchBall_Old()
 {
 	/*
 	for(int i=0;i<10;i++)
@@ -286,7 +317,7 @@ task adjustUp()
 		}
 
 		ClearTimer(T3);
-		while(time1[T3] < 200){};
+		while(time1[T3] < 1000){};
 
 		//wait1Msec(200);
 
@@ -338,7 +369,7 @@ task adjustDown()
 		}
 
 		ClearTimer(T4);
-		while(time1[T4] < 200){};
+		while(time1[T4] < 1000){};
 
 		//wait1Msec(200);
 
@@ -630,7 +661,7 @@ int GetExpectedSpeedFlywheelUp()
 	case Far: { speed = 600; break; }
 	case Middle: { speed = 500; break; }
 	case Near: { speed = 800; break; }
-	case AutonomousMode: { speed = 70; break; }
+	case AutonomousMode: { speed = 450; break; }
 	case AutonomousModeShort: { speed = 0; break; }
 	case WarmUP: { speed = 400; break; }
 	case WarmUP2: { speed = 600; break; }
@@ -651,7 +682,7 @@ int GetExpectedSpeedFlywheelDown()
 	case Far: { speed = 60; break; }
 	case Middle: { speed = 50; break; }
 	case Near: { speed = 80; break; }
-	case AutonomousMode: { speed = 70; break; }
+	case AutonomousMode: { speed = 450; break; }
 	case AutonomousModeShort: { speed = 0; break; }
 	case WarmUP: { speed = 40; break; }
 	case WarmUP2: { speed = 60; break; }
@@ -672,8 +703,9 @@ int GetPowerFlywheelUp()
 	case Far: { power = 60; break; }
 	case Middle: { power = 50; break; }
 	case Near: { power = 80; break; }
-	case AutonomousMode: { power = 67; break; }
+	case AutonomousMode: { power = 70; break; }
 	case AutonomousModeShort: { power = 0; break; }
+	case Skill: { power = 67; break; }
 	case WarmUP: { power = 40; break; }
 	case WarmUP2: { power = 60; break; }
 	case Test: { power = 40; break; }
@@ -696,8 +728,9 @@ int GetPowerFlywheelDown()
 	case Far: { power = 55; break; }
 	case Middle: { power = 50; break; }
 	case Near: { power = 0; break; }
-	case AutonomousMode: { power = 67; break; }
+	case AutonomousMode: { power = 70; break; }
 	case AutonomousModeShort: { power = 75; break; }
+	case Skill: { power = 67; break; }
 	case WarmUP: { power = 40; break; }
 	case WarmUP2: { power = 60; break; }
 	case Test: { power = 40; break; }
@@ -732,7 +765,15 @@ int GetPowerFlywheelDown()
 
 int GetMidBeltPower()
 {
-	int power = 23;
+	int power = 0;
+
+	switch(BeltSpeed)
+	{
+		case Skill: { power = 27; break; }
+		case AutonomousMode: { power = 26; break; }
+		default: { power = 23; break; }
+	}
+
 	int adjustedPower = AdjustPowerUsingBatteryLevel(power);
 	return adjustedPower;
 }
@@ -933,13 +974,14 @@ task usercontrol()
 			//StartTask(startBelt);
 			//StartTask(startShortGameMode);
 
-			if (warmedUp == false)
-			{
-				WarmUpLauncher();
-				warmedUp = true;
-			}
-	
-			writeDebugStreamLine(">>>>>>>>>>>>>>>  launchBall invoked");
+			//if (warmedUp == false)
+			//{
+			//	warmedUp = true;
+			//}
+
+			WarmUpLauncher();
+
+			//writeDebugStreamLine(">>>>>>>>>>>>>>>  launchBall invoked");
 
 			StartTask(launchBall);
 		}
@@ -1012,25 +1054,25 @@ void WarmUpLauncher()
 	int power_Down = GetPowerFlywheelDown();
 	if (power < power_Down)
 	{		
-		writeDebugStream("WarmUP started\t");
+		//writeDebugStream("WarmUP started\t");
 	
 		LauncherRange = WarmUP;
 		StartTask(startLauncher);
 
 
-		writeDebugStream("WarmUP#1\t");
+		//writeDebugStream("WarmUP#1\t");
 
 		wait1Msec(1500);
 
 		LauncherRange = WarmUP2;
 		StartTask(startLauncher);
 
-		writeDebugStream("WarmUP#2\t");
+		//writeDebugStream("WarmUP#2\t");
 
-		wait1Msec(1500);
+		wait1Msec(1000);
 	}
 	
-	writeDebugStreamLine("\tWarmUP done\t");
+	//writeDebugStreamLine("\tWarmUP done\t");
 }
 
 void StartAndControlLauncher()
