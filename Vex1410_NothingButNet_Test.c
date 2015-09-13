@@ -1,6 +1,7 @@
 #pragma config(I2C_Usage, I2C1, i2cSensors)
 #pragma config(Sensor, in1,    ExternalBatteryValue, sensorAnalog)
-#pragma config(Sensor, dgtl1,  touchSensor,    sensorTouch)
+#pragma config(Sensor, dgtl1,  touchSensorLaunched,    sensorTouch)
+#pragma config(Sensor, dgtl2,  touchSensorLoaded,    sensorTouch)
 #pragma config(Sensor, I2C_1,  ,               sensorQuadEncoderOnI2CPort,    , AutoAssign)
 #pragma config(Sensor, I2C_2,  ,               sensorQuadEncoderOnI2CPort,    , AutoAssign)
 #pragma config(Motor,  port1,           WheelBackRight, tmotorVex393, openLoop, reversed)
@@ -78,6 +79,7 @@ bool AdjustedDown;
 
 // global subroutines
 void WarmUpLauncher();
+void MakeLauncherIdle();
 int GetPowerFlywheelUp();
 int GetPowerFlywheelDown();
 int GetBeltPower();
@@ -136,15 +138,17 @@ void pre_auton()
 
 task autonomous()
 {
+	WarmUpLauncher();
+	//wait1Msec(1000);
+
 	LauncherRange = AutonomousMode;
 	BeltSpeed = AutonomousMode;
-	LauncherPowerOffset = 1;
 
 	StartTask(startLauncher);
-
-	wait1Msec(3000);
+	wait1Msec(1500);
 
 	StartTask(startBelt);
+	StartTask(startMidBelt);
 
 	wait1Msec(10000);
 
@@ -153,20 +157,6 @@ task autonomous()
 }
 
 task launchBall()
-{
-	LauncherRange = AutonomousMode;
-	BeltSpeed = AutonomousMode;
-
-	StartTask(startLauncher);
-	wait1Msec(1000);
-
-	StartTask(startBelt);
-	StartTask(startMidBelt);
-
-}
-
-
-task launchBall_Skill()
 {
 	LauncherRange = Skill;
 	BeltSpeed = Skill;
@@ -177,6 +167,145 @@ task launchBall_Skill()
 	StartTask(startBelt);
 	StartTask(startMidBelt);
 
+	int launcherUp;
+	int launcherDown;
+			
+	ClearTimer(T1);
+	ClearEncoder();
+
+	
+	ClearTimer(T2);
+	
+	while(true)
+	{/*
+		if (time1[T1] >= 1000)
+		{
+			launcherUp = GetEncoderLauncherUp();
+			launcherDown = GetEncoderLauncherDown();
+			writeDebugStreamLine("Up: %d, Down: %d", launcherUp, launcherDown);
+			
+			ClearTimer(T1);
+			ClearEncoder();
+		}*/
+	
+		if (SensorValue[touchSensorLaunched] == 1)
+		{
+			wait1Msec(30);
+
+			//StartTask(startLauncher);
+			//MakeLauncherIdle();
+			//ClearTimer(T2);
+			
+			StartTask(startLauncher);
+
+			int powerMidBelt = motor[MidBelt];
+			int powerBelt = motor[Belt];
+			
+			motor[MidBelt] = 0;
+			motor[Belt] = 0;
+			
+			
+			wait1Msec(1500);
+			writeDebugStreamLine(">>>>>>>>> Launched: Up: %d, Down: %d", launcherUp, launcherDown);
+			ClearTimer(T2);
+			
+			motor[MidBelt] = powerMidBelt;
+			motor[Belt] = powerBelt;
+		}
+		
+		
+		if (time1[T2] >= 3000)
+		//if (false)
+		{
+			StartTask(startLauncher);
+
+
+			//writeDebugStreamLine("<<<<<<<<< Idle Launcher Started");
+			MakeLauncherIdle();
+			writeDebugStreamLine("<<<<<<<<< Idle Launcher Done");
+						
+			ClearTimer(T2);
+		}
+		
+	}
+}
+
+
+
+void MakeLauncherIdle()
+{
+	int powerMidBelt = motor[MidBelt];
+	int powerBelt = motor[Belt];
+	motor[MidBelt] = 0;
+	motor[Belt] = 0;
+		
+	//StopTask(startMidBelt);
+
+	float powerUp = motor[LauncherUp1];
+	float powerDown = motor[LauncherDown1];
+	
+	float powerUpNew = powerUp * 0.8;
+	float powerDownNew = powerDown * 0.8;
+	
+	motor[LauncherUp1] = powerUpNew;
+	motor[LauncherUp2] = powerUpNew;
+	motor[LauncherDown1] = powerDownNew;
+	motor[LauncherDown2] = powerDownNew;
+	
+	wait1Msec(500);
+
+	motor[LauncherUp1] = powerUp;
+	motor[LauncherUp2] = powerUp;
+	motor[LauncherDown1] = powerDown;
+	motor[LauncherDown2] = powerDown;
+	
+	wait1Msec(1000);
+
+	//resumeTask(startMidBelt);
+
+	motor[MidBelt] = powerMidBelt;
+	motor[Belt] = powerBelt;
+		
+}
+
+
+
+task launchBall_Skill()
+{
+	LauncherRange = Skill;
+	BeltSpeed = Skill;
+
+	StartTask(startLauncher);
+	wait1Msec(700);
+
+	StartTask(startBelt);
+	StartTask(startMidBelt);
+
+	int launcherUp;
+	int launcherDown;
+
+			
+	ClearTimer(T1);
+	ClearEncoder();
+
+	while(true)
+	{
+		if (time1[T1] >= 1000)
+		{
+			launcherUp = GetEncoderLauncherUp();
+			launcherDown = GetEncoderLauncherDown();
+			writeDebugStreamLine("Up: %d, Down: %d", launcherUp, launcherDown);
+			
+			ClearTimer(T1);
+			ClearEncoder();
+		}
+	
+		if (SensorValue[touchSensorLaunched] == 1)
+		{
+				wait1Msec(50);
+				writeDebugStreamLine(">>>>>>>>> Launched: Up: %d, Down: %d", launcherUp, launcherDown);
+		}
+	}
 }
 
 
@@ -211,7 +340,7 @@ task launchBall_Old()
 
 		writeDebugStreamLine(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Launched ");
 
-		while(SensorValue[touchSensor] == 0){};
+		while(SensorValue[touchSensorLaunched] == 0){};
 
 		StartTask(stopBelt);
 
@@ -280,7 +409,7 @@ task startGameMode()
 			break;
 		}
 
-		int value = SensorValue[touchSensor];
+		int value = SensorValue[touchSensorLaunched];
 		if (value > 0 && time1[T2] > 1000)
 		{
 			//StartTask(adjustLauncher);
@@ -466,6 +595,8 @@ void AdjustDown(int current)
 	}
 }
 */
+
+
 task adjustLauncher()
 {
 	StartTask(adjustLauncherUp);
@@ -610,7 +741,7 @@ task startLauncher()
 	// up:0, down:100 = mid-short range
 	// up:80, down:0 = short range
 
-	ClearEncoder();
+	//ClearEncoder();
 
 	int power_Up = GetPowerFlywheelUp();
 	int power_Down = GetPowerFlywheelDown();
@@ -705,7 +836,7 @@ int GetPowerFlywheelUp()
 	case Near: { power = 80; break; }
 	case AutonomousMode: { power = 70; break; }
 	case AutonomousModeShort: { power = 0; break; }
-	case Skill: { power = 67; break; }
+	case Skill: { power = 68; break; }
 	case WarmUP: { power = 40; break; }
 	case WarmUP2: { power = 60; break; }
 	case Test: { power = 40; break; }
@@ -730,7 +861,7 @@ int GetPowerFlywheelDown()
 	case Near: { power = 0; break; }
 	case AutonomousMode: { power = 70; break; }
 	case AutonomousModeShort: { power = 75; break; }
-	case Skill: { power = 67; break; }
+	case Skill: { power = 68; break; }
 	case WarmUP: { power = 40; break; }
 	case WarmUP2: { power = 60; break; }
 	case Test: { power = 40; break; }
@@ -769,8 +900,8 @@ int GetMidBeltPower()
 
 	switch(BeltSpeed)
 	{
-		case Skill: { power = 27; break; }
-		case AutonomousMode: { power = 26; break; }
+		case Skill: { power = 28; break; }
+		case AutonomousMode: { power = 20; break; }
 		default: { power = 23; break; }
 	}
 
@@ -786,7 +917,8 @@ int GetBeltPower()
 	{
 	case Fast: { power = 60; break; }
 	case Slow: { power = 30; break; }
-	case AutonomousMode: { power = 35; break; }
+	case Skill: { power = 30; break; }
+	case AutonomousMode: { power = 30; break; }
 	case AutonomousModeShort: { power = 30; break; }
 	default: { power = 35; break; }
 	}
@@ -948,7 +1080,7 @@ task usercontrol()
 		}
 		*/
 
-		if (SensorValue[touchSensor] == 1)
+		if (SensorValue[touchSensorLaunched] == 1)
 		{
 			if (HasGameModeStarted == true)
 			{
