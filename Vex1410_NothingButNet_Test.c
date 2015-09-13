@@ -109,7 +109,8 @@ enum {
   AutonomousModeShort = 21,
 
   Skill = 22,
-
+  UserControlMode = 23,
+  
   WarmUP = 30,
   WarmUP2 = 31,
   
@@ -156,10 +157,88 @@ task autonomous()
 	StartTask(stopBelt);
 }
 
+
 task launchBall()
 {
 	LauncherRange = Skill;
 	BeltSpeed = Skill;
+
+	StartTask(startLauncher);
+	wait1Msec(1000);
+
+	StartTask(startBelt);
+	StartTask(startMidBelt);
+
+	int launcherUp;
+	int launcherDown;
+			
+	ClearTimer(T1);
+	ClearEncoder();
+	ClearTimer(T2);
+	
+	while(true)
+	{/*
+		if (time1[T1] >= 1000)
+		{
+			launcherUp = GetEncoderLauncherUp();
+			launcherDown = GetEncoderLauncherDown();
+			writeDebugStreamLine("Up: %d, Down: %d", launcherUp, launcherDown);
+			
+			ClearTimer(T1);
+			ClearEncoder();
+		}*/
+	
+		if (time1[T1] >= 500 && SensorValue[touchSensorLoaded] == 1)
+		{
+			//wait1Msec(30);
+
+		  writeDebugStreamLine(">>>>>>>>> Launched");
+			
+			//StartTask(startLauncher);
+			//MakeLauncherIdle();
+			//ClearTimer(T1);
+			//ClearTimer(T2);
+			
+			StartTask(startLauncher);
+
+			int powerMidBelt = motor[MidBelt];
+			int powerBelt = motor[Belt];
+			
+			motor[MidBelt] = 0;
+			motor[Belt] = 0;
+			
+			wait1Msec(100);
+			writeDebugStreamLine(">>>>>>>>> Launched: Up: %d, Down: %d", launcherUp, launcherDown);
+			
+			motor[MidBelt] = powerMidBelt;
+			motor[Belt] = powerBelt;
+
+			ClearTimer(T1);
+			ClearTimer(T2);
+		}
+		
+		
+		if (time1[T2] >= 3000)
+		//if (false)
+		{
+			StartTask(startLauncher);
+
+
+			//writeDebugStreamLine("<<<<<<<<< Idle Launcher Started");
+			MakeLauncherIdle();
+			writeDebugStreamLine("<<<<<<<<< Idle Launcher Done");
+						
+			ClearTimer(T2);
+		}
+		
+	}
+}
+
+task launchBall_DrivingMode()
+{
+	// Made 13-16 BALLS
+	LauncherRange = UserControlMode;
+	BeltSpeed = UserControlMode;
 
 	StartTask(startLauncher);
 	wait1Msec(1000);
@@ -190,7 +269,7 @@ task launchBall()
 	
 		if (SensorValue[touchSensorLaunched] == 1)
 		{
-			wait1Msec(30);
+			wait1Msec(30); // Need this to avoid noise.
 
 			//StartTask(startLauncher);
 			//MakeLauncherIdle();
@@ -239,7 +318,7 @@ void MakeLauncherIdle()
 	motor[MidBelt] = 0;
 	motor[Belt] = 0;
 		
-	//StopTask(startMidBelt);
+	StopTask(startMidBelt);
 
 	float powerUp = motor[LauncherUp1];
 	float powerDown = motor[LauncherDown1];
@@ -259,7 +338,7 @@ void MakeLauncherIdle()
 	motor[LauncherDown1] = powerDown;
 	motor[LauncherDown2] = powerDown;
 	
-	wait1Msec(1000);
+	//wait1Msec(1000);
 
 	//resumeTask(startMidBelt);
 
@@ -837,6 +916,7 @@ int GetPowerFlywheelUp()
 	case AutonomousMode: { power = 70; break; }
 	case AutonomousModeShort: { power = 0; break; }
 	case Skill: { power = 68; break; }
+	case UserControlMode: { power = 68; break; }
 	case WarmUP: { power = 40; break; }
 	case WarmUP2: { power = 60; break; }
 	case Test: { power = 40; break; }
@@ -862,6 +942,7 @@ int GetPowerFlywheelDown()
 	case AutonomousMode: { power = 70; break; }
 	case AutonomousModeShort: { power = 75; break; }
 	case Skill: { power = 68; break; }
+	case UserControlMode: { power = 68; break; }
 	case WarmUP: { power = 40; break; }
 	case WarmUP2: { power = 60; break; }
 	case Test: { power = 40; break; }
@@ -901,6 +982,7 @@ int GetMidBeltPower()
 	switch(BeltSpeed)
 	{
 		case Skill: { power = 28; break; }
+		case UserControlMode: { power = 28; break; }
 		case AutonomousMode: { power = 20; break; }
 		default: { power = 23; break; }
 	}
@@ -918,6 +1000,7 @@ int GetBeltPower()
 	case Fast: { power = 60; break; }
 	case Slow: { power = 30; break; }
 	case Skill: { power = 30; break; }
+	case UserControlMode: { power = 30; break; }
 	case AutonomousMode: { power = 30; break; }
 	case AutonomousModeShort: { power = 30; break; }
 	default: { power = 35; break; }
