@@ -96,6 +96,7 @@ void ClearEncoderUp();
 void ClearEncoderDown();
 int GetExpectedSpeedFlywheelUp();
 int GetExpectedSpeedFlywheelDown();
+void StopOrReverseBelt();
 
 // properties
 enum {
@@ -140,6 +141,7 @@ void pre_auton()
 
 task autonomous()
 {
+	
 	WarmUpLauncher();
 	//wait1Msec(1000);
 
@@ -147,7 +149,7 @@ task autonomous()
 	BeltSpeed = AutonomousMode;
 
 	StartTask(startLauncher);
-	wait1Msec(1400);
+	wait1Msec(1700);
 
 	StartTask(startBelt);
 	StartTask(startMidBelt);
@@ -260,6 +262,8 @@ void AdjustSkill(float up, float down)
 	//if (up < 95 || 99 < up)
 	if (up < 95)
 	{
+		writeDebugStreamLine("---------- Adjusted up < 95");
+	
 		adjusted = true;
 		float powerUpNew = powerUp * 1.2;
 		motor[LauncherUp1] = powerUpNew;
@@ -267,6 +271,8 @@ void AdjustSkill(float up, float down)
 	}
 	else if (99 < up)
 	{
+		writeDebugStreamLine("---------- Adjusted 99 < up");
+
 		adjusted = true;
 		float powerUpNew = powerUp * 0.8;
 		motor[LauncherUp1] = powerUpNew;
@@ -275,6 +281,8 @@ void AdjustSkill(float up, float down)
 	
 	if (down < 105)
 	{
+		writeDebugStreamLine("---------- Adjusted down < 105");
+		
 		adjusted = true;
 		float powerDownNew = powerDown * 1.2;
 		motor[LauncherDown1] = powerDownNew;
@@ -282,6 +290,8 @@ void AdjustSkill(float up, float down)
 	}
 	else if (110 < down)
 	{
+		writeDebugStreamLine("---------- Adjusted 110 < down");
+		
 		adjusted = true;
 		float powerDownNew = powerDown * 0.8;
 		motor[LauncherDown1] = powerDownNew;
@@ -291,8 +301,6 @@ void AdjustSkill(float up, float down)
 	
 	if (adjusted == true)
 	{
-		writeDebugStreamLine("---------- Adjust Skill done");
-	
 		wait1Msec(500);
 	
 		motor[LauncherUp1] = powerUp;
@@ -459,19 +467,9 @@ task launchBall_Skill()
 	}
 }
 
-
+/*
 task launchBall_Old()
 {
-	/*
-	for(int i=0;i<10;i++)
-	{
-		for(int j=0;j<10000;j++)
-		{
-		}
-		writeDebugStreamLine("%d", i);
-	}
-	*/
-	
 	LauncherRange = AutonomousMode;
 	AdjustedUp = false;
 	AdjustedDown = false;
@@ -507,74 +505,25 @@ task launchBall_Old()
 		//StartTask(adjustDown);
 
 }
-
+*/
 task startGameMode()
 {
-	LauncherPowerOffset = 1;
-
-	LauncherRange = WarmUP;
-	StartTask(startLauncher);
-
-	wait1Msec(1000);
+		WarmUpLauncher();
+	//wait1Msec(1000);
 
 	LauncherRange = AutonomousMode;
 	BeltSpeed = AutonomousMode;
 
 	StartTask(startLauncher);
-
-	wait1Msec(500);
+	wait1Msec(1700);
 
 	StartTask(startBelt);
-
-	//LauncherRange = MidBeltPower;
 	StartTask(startMidBelt);
 
-	ClearTimer(T2);
-	//ClearTimer(T4);
-	ClearEncoder();
+	wait1Msec(13000);
 
-	//float launcherUp;
-	//float launcherDown;
-
-	while(true)
-	{
-
-		if (time1[T2] > 1000)
-		{
-			StartTask(adjustUp);
-			StartTask(adjustDown);
-
-			ClearTimer(T2);
-			//ClearEncoder();
-
-		}
-
-
-		//AdjustUp();
-		//AdjustDown();
-
-
-		int btn5d = vexRT[Btn5D]; // stop launcher
-		if (btn5d == 1)
-		{
-			break;
-		}
-
-		int value = SensorValue[touchSensorLaunched];
-		if (value > 0 && time1[T2] > 1000)
-		{
-			//StartTask(adjustLauncher);
-			//ClearTimer(T4);
-			//writeDebugStreamLine(">>>>> launched <<<<<");
-			//writeDebugStreamLine("\tlauncherUp: %d, launcherDown: %d", launcherUp, launcherDown);
-		}
-	}
-
-	StopTask(adjustUp);
-	StopTask(adjustDown);
-
-	StartTask(stopGameMode);
-	StopTask(startGameMode);
+	StartTask(stopLauncher);
+	StartTask(stopBelt);
 }
 
 //void AdjustUp()
@@ -856,7 +805,7 @@ task startShortGameMode()
 {
 	LauncherRange = AutonomousModeShort;
 	BeltSpeed = AutonomousModeShort;
-	LauncherPowerOffset = 1;
+	LauncherPowerOffset = 0;
 
 	StartTask(startLauncher);
 
@@ -985,10 +934,10 @@ int GetPowerFlywheelUp()
 	{
 	case Far: { power = 60; break; }
 	case Middle: { power = 50; break; }
-	case Near: { power = 80; break; }
+	case Near: { power = 53; break; }
 	case AutonomousMode: { power = 68; break; }
 	case AutonomousModeShort: { power = 0; break; }
-	case Skill: { power = 63; break; }
+	case Skill: { power = 63; break; } // Good(80,50)
 	case UserControlMode: { power = 68; break; }
 	case WarmUP: { power = 40; break; }
 	case WarmUP2: { power = 60; break; }
@@ -996,6 +945,7 @@ int GetPowerFlywheelUp()
 	default: { power = 85; break; }
 	}
 
+	power = power + LauncherPowerOffset * 0.05;
 	int adjustedPower = AdjustPowerUsingBatteryLevel(power);
 
 	//writeDebugStream("adjustedPower UP: %d, powerRaw: %d", adjustedPower, power);
@@ -1011,7 +961,7 @@ int GetPowerFlywheelDown()
 	{
 	case Far: { power = 55; break; }
 	case Middle: { power = 50; break; }
-	case Near: { power = 0; break; }
+	case Near: { power = 53; break; }
 	case AutonomousMode: { power = 68; break; }
 	case AutonomousModeShort: { power = 75; break; }
 	case Skill: { power = 65; break; }
@@ -1021,7 +971,8 @@ int GetPowerFlywheelDown()
 	case Test: { power = 40; break; }
 	default: { power = 0; break; }
 	}
-
+	
+	power = power + LauncherPowerOffset * 0.05;
 	int adjustedPower = AdjustPowerUsingExternalBatteryLevel(power) ;
 
 	//writeDebugStreamLine(",	adjustedPower Down: %d, PowerRaw: %d ", adjustedPower, power);
@@ -1054,10 +1005,12 @@ int GetMidBeltPower()
 
 	switch(BeltSpeed)
 	{
+		case Fast: { power = 28; break; }
+		case Slow: { power = 25; break; }
 		case Skill: { power = 28; break; }
 		case UserControlMode: { power = 28; break; }
-		case AutonomousMode: { power = 23; break; }
-		default: { power = 23; break; }
+		case AutonomousMode: { power = 28; break; }
+		default: { power = 28; break; }
 	}
 
 	int adjustedPower = AdjustPowerUsingBatteryLevel(power);
@@ -1070,7 +1023,7 @@ int GetBeltPower()
 
 	switch(BeltSpeed)
 	{
-	case Fast: { power = 60; break; }
+	case Fast: { power = 50; break; }
 	case Slow: { power = 30; break; }
 	case Skill: { power = 30; break; }
 	case UserControlMode: { power = 30; break; }
@@ -1158,12 +1111,13 @@ void ClearEncoderDown()
 
 task usercontrol()
 {
+	
 	// User control code here, inside the loop
 	// int isLauncherRunning = false;
 	// int isBeltRunning = false;
-	LauncherRange = Middle;
-	BeltSpeed	= Slow;
-	LauncherPowerOffset = 1;
+	LauncherRange = Far;
+	BeltSpeed	= Fast;
+	LauncherPowerOffset = 0;
 
 	bool HasGameModeStarted = false;
 
@@ -1171,190 +1125,195 @@ task usercontrol()
 	
 	while (true)
 	{
-		int btn5u = vexRT[Btn5U]; // start launcher
-		int btn5d = vexRT[Btn5D]; // stop launcher
-
-		int btn6u = vexRT[Btn6U]; // start belt
-		int btn6d = vexRT[Btn6D]; // stop belt
-
-		int btn7u = vexRT[Btn7U]; // short range
-		int btn7d = vexRT[Btn7D]; // long
+		wait1Msec(50);
 		
-		int btn8u = vexRT[Btn8U]; // Fast Belt
-		int btn8d = vexRT[Btn8D]; // Slow Belt
-		int btn8r = vexRT[Btn8R]; // stop Belt
-		int btn8l = vexRT[Btn8L]; // stop Belt
+		// Game Mode
+		int btn5u = vexRT[Btn5U]; // start user control
+		int btn7u = vexRT[Btn7U]; // Launcher start for short game
+		int btn7d = vexRT[Btn7D]; // Launcher start for long game
+		int btn5d = vexRT[Btn5D]; // stop game mode / user control
+		
+		int btn6u = vexRT[Btn6U]; // start autonomous
 
 		
-		// moving
+		
+		//int btn6u = vexRT[Btn6U]; // start belt
+		//int btn6d = vexRT[Btn6D]; // stop belt
+
+		// Launcher Speed
+		int btn8u = vexRT[Btn8U]; // Fast Launcher
+		int btn8d = vexRT[Btn8D]; // Slow Launcher
+		
+		// Launcher Speed
+		int btn8l = vexRT[Btn8L]; // Start Belt auto
+		int btn8r = vexRT[Btn8R]; // Stop/Reverser Belt
+		
+		int btn6d = vexRT[Btn6D]; // Start Belt Manual
+
+		
+		// Move
+		int power2 = vexRT[Ch2];  // Move forward, backward
+		int power4 = vexRT[Ch4]; // Rotate
 		int btn7l = vexRT[Btn7L]; // Shift left
 		int btn7r = vexRT[Btn7R]; // Shift right
 		int power7 = 110;
 
-		int power1 = vexRT[Ch1]; //
-		int power2 = vexRT[Ch2];  //Move forward, backward
-		int power3 = vexRT[Ch3];  //
-		int power4 = vexRT[Ch4]; //Rotate
-
 		motor[MiddleWheel] = (btn7r - btn7l) * power7;
 		motor[WheelRight] = power2 + power4;
 		motor[WheelLeft] = power2 - power4;
-	
 
-		/*
-		if (power1 > 0)
-		{
-			motor[WheelRight] = -power1;
-			motor[WheelLeft] = power1;
-		}
-		if (power1 < 0)
-		{
-			motor[WheelRight] = -power1;
-			motor[WheelLeft] = power1;
-		}
-		if (power1 == 0)
-		{
-			motor[WheelRight] = 0;
-			motor[WheelLeft] = 0;
-		}*/
-	
-			//if (power1 != 0)
-			//{
-			//}
-			
-			//if (power3 != 0)
-			//{
-			//	motor[WheelRight] = power3 - power4;
-			//	motor[WheelLeft] = power3 + power4;
-			//}
-			//else if (power4 != 0)
-			//{
-			//	motor[WheelRight] = -power4;
-			//	motor[WheelLeft] = power4;
-			//}
-			//else
-			//{
-			//	//motor[MiddleWheel] = 0;
-	
-			//	motor[WheelRight] = 0;
-			//	motor[WheelLeft] = 0;
-			//}
-		/*
-		if (power8L == 1)
-		{
-			motor[WheelMiddle] = 60;
-		}
-		if (power8R == 1)
-		{
-			//motor[WheelMiddle] = -60;
-		}
-		if (power8L == 0 && power8R == 0)
-		{
-			motor[WheelMiddle] = 0;
-		}
-		*/
-
-		if (SensorValue[touchSensorLaunched] == 1)
-		{
-			if (HasGameModeStarted == true)
-			{
-
-			}
-		}
-		// start or stop launcher
 		if (btn5u == 1)
 		{
-			HasGameModeStarted = true;
-			StartTask(startGameMode);
-		}
-
-		if (btn5d == 1)
-		{
-			HasGameModeStarted = false;
-			StartTask(stopGameMode);
-		}
-
-		// start or stop belt
-		if (btn6u == 1)
-		{
-			//StartTask(startBelt);
-			//StartTask(startShortGameMode);
-
-			//if (warmedUp == false)
-			//{
-			//	warmedUp = true;
-			//}
-
-			WarmUpLauncher();
-
-			//writeDebugStreamLine(">>>>>>>>>>>>>>>  launchBall invoked");
-
 			StartTask(launchBall);
 		}
-
-		if (btn6d == 1)
+		else if (btn5d == 1)
 		{
-			//StartTask(stopGameMode);
-			StopTask(launchBall);	
+			StopTask(launchBall);
+			StopTask(autonomous);
 			StartTask(stopGameMode);
-			
-
+		}
+		else if (btn6u == 1)
+		{
+			StartTask(autonomous);
 		}
 
-		if (btn7u == 1)
+		else if (btn7u == 1)
 		{
+			LauncherPowerOffset = 0;
 			LauncherRange = Near;
-			//StartTask(startLauncher);
-			StartAndControlLauncher();
-		}
+			BeltSpeed = Slow;
 
-		/*
-		if (btn7l == 1)
-		{
-			LauncherRange = Middle;
-			//StartTask(startLauncher);
-			StartAndControlLauncher();
+			StartTask(startLauncher);
+			//StartAndControlLauncher();
 		}
-		
-		if (btn7r == 1)
-		{
-			StartTask(stopLauncher);
-		}
-		*/
-
-		if (btn7d == 1)
+		else if (btn7d == 1)
 		{
 			//LauncherRange = Test;
 
+			LauncherPowerOffset = 0;
 			LauncherRange = Far;
-			//StartTask(startLauncher);
-			StartAndControlLauncher();
+			BeltSpeed	 = Fast;
+
+			StartTask(startLauncher);
+			//StartAndControlLauncher();
 		}
 
-		if (btn8u == 1)
+		else if (btn8u == 1 && time1[T3] > 1000)
 		{
-			BeltSpeed = Fast;
+			ClearTimer(T3);
+			//LauncherPowerOffset++;
+
+			float powerUp = motor[LauncherUp1];
+			float powerDown = motor[LauncherDown1];
+
+			float powerUpNew = powerUp * 1.05;
+			float powerDownNew = powerDown * 1.05;
+
+			writeDebugStreamLine("<<<<<<<<<<<< Speed Up %d -> %d", powerUp, powerUpNew);
+
+							
+			motor[LauncherUp1] = powerUpNew;
+			motor[LauncherUp2] = powerUpNew;
+			motor[LauncherDown1] = powerDownNew;
+			motor[LauncherDown2] = powerDownNew;
+
+			
+		}
+		else if (btn8d == 1 && time1[T3] > 1000)
+		{
+			ClearTimer(T3);
+			//LauncherPowerOffset--;
+			
+			float powerUp = motor[LauncherUp1];
+			float powerDown = motor[LauncherDown1];
+
+			float powerUpNew = powerUp * 0.95;
+			float powerDownNew = powerDown * 0.95;
+
+			writeDebugStreamLine("<<<<<<<<<<<< Speed Down %d -> %d", powerUp, powerUpNew);
+			
+			motor[LauncherUp1] = powerUpNew;
+			motor[LauncherUp2] = powerUpNew;
+			motor[LauncherDown1] = powerDownNew;
+			motor[LauncherDown2] = powerDownNew;
+
+
+			//BeltSpeed = Slow;
+			//StartTask(startBelt);
+		}
+		else if (btn8r == 1)
+		{
+			StopOrReverseBelt();
+		}
+		
+		else if (btn8l == 1)
+		{
+			motor[TopBelt] = motor[BottomBelt] = GetBeltPower() * btn8l;
+			/*
 			StartTask(startBelt);
-		}
-
-		if (btn8d == 1)
-		{
-			BeltSpeed = Slow;
-			StartTask(startBelt);
-		}
-
-		if (btn8r == 1)
-		{
-			StartTask(stopBelt);
-		}
-
-		if (btn8l == 1)
-		{
+			
 			StartTask(startMidBelt);
+
+			int power = motor[LauncherUp1];
+			if (power > 0)
+			{
+				writeDebugStreamLine(">>>>>>>>>>>>>> Launched!!!");
+				
+				ClearEncoder();
+				wait1Msec(200);
+				float launcherUp = GetEncoderLauncherUp();
+				float launcherDown = GetEncoderLauncherDown();
+				AdjustSkill(launcherUp, launcherDown);
+			}*/
+			
 		}
+		else if (btn6d == 1)
+		{
+			motor[TopBelt] = motor[BottomBelt] = GetBeltPower();
+			motor[MidBelt] = GetMidBeltPower();
+			
+			if (LauncherRange == Far)
+			{
+				writeDebugStreamLine(">>>>>>>>>>>>>> Launched!!!");
+				
+				ClearEncoder();
+				wait1Msec(200);
+				float launcherUp = GetEncoderLauncherUp();
+				float launcherDown = GetEncoderLauncherDown();
+				AdjustSkill(launcherUp, launcherDown);
+			}
+		}
+		
+		//else if (btn6d == 0)
+		//{
+		//	motor[TopBelt] = motor[BottomBelt] = 0;
+		//	motor[MidBelt] = 0;
+		//}
 	}
 }
 
+void StopOrReverseBelt()
+{
+	int power = motor[TopBelt];
+	
+	if (power != 0)
+	{
+		StartTask(stopBelt);
+	}
+	else
+	{
+		
+		motor[MidBelt] = 0;
+		motor[TopBelt] = motor[BottomBelt] = 0;
+				
+		motor[MidBelt] = -40;
+		motor[TopBelt] = motor[BottomBelt] = -40;
+				
+		wait1Msec(150);
+		
+		StartTask(stopBelt);
+	}
+}
 
 void WarmUpLauncher()
 {
@@ -1390,34 +1349,40 @@ void StartAndControlLauncher()
 
 	LauncherRange = launcherValue;
 
-	LauncherPowerOffset = 1;
+	LauncherPowerOffset = 0;
 	StartTask(startLauncher);
 	//StartTask(testTask);
 	ClearTimer(T2);
 
+	int powerOffset = 0;
 	while(true)
 	{
-		int btn7r = vexRT[Btn7R]; // stop
+		int btn8l = vexRT[Btn8L]; // MidBelt
+		int btn8u = vexRT[Btn8U]; // Launcher Power Increase
+		int btn8d = vexRT[Btn8D]; // Launcher Power Decrease
+		//int btn8r = vexRT[Btn8R]; // Stop
+	
+		//int btn7r = vexRT[Btn7R]; // stop
 		int btn5d = vexRT[Btn5D]; // stop launcher
+		int btn6d = vexRT[Btn6D]; // stop launcher
 
-		if (btn7r + btn5d > 0)
+		motor[MidBelt] = 30 * btn8l;
+		
+		if (btn5d + btn6d > 0)
 		{
 			break;
 		}
-		else
+		
+		if (btn8u > 0)
 		{
-			if (time1[T2] > 10000)
-			{
-				//LauncherPowerOffset =
-				AdjustLauncherPower();
-				//writeDebugStreamLine("LauncherPowerOffset: %f", LauncherPowerOffset);
-
-				StartTask(startLauncher);
-				//StartTask(testTask);
-				ClearTimer(T2);
-			}
+			powerOffset++; 
 		}
+		else if (btn8d > 0)
+		{
+			powerOffset--;
+		}
+		
 	}
 
-	StartTask(stopLauncher);
+	StartTask(stopGameMode);
 }
