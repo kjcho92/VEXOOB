@@ -97,6 +97,7 @@ void ClearEncoderDown();
 int GetExpectedSpeedFlywheelUp();
 int GetExpectedSpeedFlywheelDown();
 void StopOrReverseBelt();
+void CheckAndAdjust();
 
 // properties
 enum {
@@ -932,7 +933,7 @@ int GetPowerFlywheelUp()
 
 	switch(LauncherRange)
 	{
-	case Far: { power = 60; break; }
+	case Far: { power = 63; break; }
 	case Middle: { power = 50; break; }
 	case Near: { power = 53; break; }
 	case AutonomousMode: { power = 68; break; }
@@ -959,7 +960,7 @@ int GetPowerFlywheelDown()
 
 	switch(LauncherRange)
 	{
-	case Far: { power = 55; break; }
+	case Far: { power = 65; break; }
 	case Middle: { power = 50; break; }
 	case Near: { power = 53; break; }
 	case AutonomousMode: { power = 68; break; }
@@ -1115,14 +1116,14 @@ task usercontrol()
 	// User control code here, inside the loop
 	// int isLauncherRunning = false;
 	// int isBeltRunning = false;
-	LauncherRange = Far;
+	LauncherRange = Near;
 	BeltSpeed	= Fast;
 	LauncherPowerOffset = 0;
 
 	bool HasGameModeStarted = false;
 
 	bool warmedUp = false;
-	
+
 	while (true)
 	{
 		wait1Msec(50);
@@ -1162,6 +1163,13 @@ task usercontrol()
 		motor[WheelRight] = power2 + power4;
 		motor[WheelLeft] = power2 - power4;
 
+
+		if (LauncherRange == (int)Far && SensorValue[touchSensorLoaded] == 1 && time1[T4] > 1000)
+		{
+			CheckAndAdjust();
+			ClearTimer(T4);
+		}
+		
 		if (btn5u == 1)
 		{
 			StartTask(launchBall);
@@ -1198,7 +1206,7 @@ task usercontrol()
 			//StartAndControlLauncher();
 		}
 
-		else if (btn8u == 1 && time1[T3] > 1000)
+		else if (btn8u == 1 && time1[T3] > 400)
 		{
 			ClearTimer(T3);
 			//LauncherPowerOffset++;
@@ -1219,7 +1227,7 @@ task usercontrol()
 
 			
 		}
-		else if (btn8d == 1 && time1[T3] > 1000)
+		else if (btn8d == 1 && time1[T3] > 400)
 		{
 			ClearTimer(T3);
 			//LauncherPowerOffset--;
@@ -1248,7 +1256,7 @@ task usercontrol()
 		
 		else if (btn8l == 1)
 		{
-			motor[TopBelt] = motor[BottomBelt] = GetBeltPower() * btn8l;
+			motor[TopBelt] = motor[BottomBelt] = 50 * btn8l;
 			/*
 			StartTask(startBelt);
 			
@@ -1272,16 +1280,10 @@ task usercontrol()
 			motor[TopBelt] = motor[BottomBelt] = GetBeltPower();
 			motor[MidBelt] = GetMidBeltPower();
 			
-			if (LauncherRange == Far)
-			{
-				writeDebugStreamLine(">>>>>>>>>>>>>> Launched!!!");
-				
-				ClearEncoder();
-				wait1Msec(200);
-				float launcherUp = GetEncoderLauncherUp();
-				float launcherDown = GetEncoderLauncherDown();
-				AdjustSkill(launcherUp, launcherDown);
-			}
+			//if (LauncherRange == (int)Far)
+			//{
+			//	CheckAndAdjust();
+			//}
 		}
 		
 		//else if (btn6d == 0)
@@ -1290,6 +1292,16 @@ task usercontrol()
 		//	motor[MidBelt] = 0;
 		//}
 	}
+}
+void CheckAndAdjust()
+{
+		writeDebugStreamLine(">>>>>>>>>>>>>> CheckAndAdjust");
+
+		ClearEncoder();
+		wait1Msec(200);
+		float launcherUp = GetEncoderLauncherUp();
+		float launcherDown = GetEncoderLauncherDown();
+		AdjustSkill(launcherUp, launcherDown);
 }
 
 void StopOrReverseBelt()
