@@ -140,7 +140,7 @@ void pre_auton()
 //
 /////////////////////////////////////////////////////////////////////////////////////////
 
-task autonomous()
+task autonomous_Old()
 {
 	
 	WarmUpLauncher();
@@ -155,11 +155,45 @@ task autonomous()
 	StartTask(startBelt);
 	StartTask(startMidBelt);
 
-	wait1Msec(13000);
+	//wait1Msec(13000);
+
+		wait1Msec(120000);
 
 	StartTask(stopLauncher);
 	StartTask(stopBelt);
 }
+
+
+task autonomous()
+{
+
+		LauncherRange = AutonomousMode;
+		BeltSpeed = AutonomousMode;
+	
+	StartTask(startBelt);
+	StartTask(startMidBelt);
+
+		WarmUpLauncher();
+
+		LauncherRange = AutonomousMode;
+		BeltSpeed = AutonomousMode;
+	
+	StartTask(startBelt);
+	StartTask(startMidBelt);
+
+	//wait1Msec(800);
+	
+	//wait1Msec(1000);
+	StartTask(startLauncher);
+
+	//wait1Msec(13000);
+
+		wait1Msec(120000);
+
+	StartTask(stopLauncher);
+	StartTask(stopBelt);
+}
+
 
 
 task launchBall()
@@ -195,9 +229,12 @@ task launchBall()
 		//	ClearEncoder();
 		//}
 	
-		if (time1[T1] >= 1500 && SensorValue[touchSensorLoaded] == 1)
+		if (time1[T1] >= 1000 && SensorValue[touchSensorLoaded] == 1)
 		{
 			loaded = true;
+			
+			StartTask(startLauncher);
+			
 			//wait1Msec(30);
 
 		  //writeDebugStreamLine(">>>>>>>>> Launched");
@@ -207,6 +244,7 @@ task launchBall()
 			//ClearTimer(T1);
 			//ClearTimer(T2);
 			
+			/*
 		  ClearTimer(T3);
 			StartTask(startLauncher);
 
@@ -229,6 +267,7 @@ task launchBall()
 			motor[MidBelt] = powerMidBelt;
 			motor[TopBelt] = motor[BottomBelt] = powerTopBelt;
 
+			*/
 			ClearTimer(T1);
 			ClearTimer(T2);
 		}
@@ -1001,9 +1040,9 @@ int GetPowerFlywheelUp()
 	case Far: { power = 63; break; }
 	case Middle: { power = 50; break; }
 	case Near: { power = 53; break; }
-	case AutonomousMode: { power = 68; break; }
+	case AutonomousMode: { power = 64; break; }
 	case AutonomousModeShort: { power = 0; break; }
-	case Skill: { power = 63; break; } // Good(80,50)
+	case Skill: { power = 73; break; } // Good(80,50)
 	case UserControlMode: { power = 68; break; }
 	case WarmUP: { power = 35; break; }
 	case WarmUP2: { power = 60; break; }
@@ -1028,9 +1067,9 @@ int GetPowerFlywheelDown()
 	case Far: { power = 65; break; }
 	case Middle: { power = 50; break; }
 	case Near: { power = 53; break; }
-	case AutonomousMode: { power = 68; break; }
+	case AutonomousMode: { power = 64; break; }
 	case AutonomousModeShort: { power = 75; break; }
-	case Skill: { power = 65; break; }
+	case Skill: { power = 73; break; }
 	case UserControlMode: { power = 68; break; }
 	case WarmUP: { power = 35; break; }
 	case WarmUP2: { power = 60; break; }
@@ -1073,9 +1112,9 @@ int GetMidBeltPower()
 	{
 		case Fast: { power = 28; break; }
 		case Slow: { power = 25; break; }
-		case Skill: { power = 28; break; }
+		case Skill: { power = 32; break; }
 		case UserControlMode: { power = 28; break; }
-		case AutonomousMode: { power = 28; break; }
+		case AutonomousMode: { power = 25; break; }
 		default: { power = 28; break; }
 	}
 
@@ -1091,9 +1130,9 @@ int GetBeltPower()
 	{
 	case Fast: { power = 50; break; }
 	case Slow: { power = 30; break; }
-	case Skill: { power = 30; break; }
+	case Skill: { power = 40; break; }
 	case UserControlMode: { power = 30; break; }
-	case AutonomousMode: { power = 30; break; }
+	case AutonomousMode: { power = 40; break; }
 	case AutonomousModeShort: { power = 30; break; }
 	default: { power = 35; break; }
 	}
