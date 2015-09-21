@@ -166,6 +166,7 @@ task autonomous_Old()
 
 task autonomous()
 {
+	ClearTimer(T3);
 
 		LauncherRange = AutonomousMode;
 		BeltSpeed = AutonomousMode;
@@ -184,14 +185,83 @@ task autonomous()
 	//wait1Msec(800);
 	
 	//wait1Msec(1000);
-	StartTask(startLauncher);
+	
+	int index = 0;
+	while(true)
+	{
+		StartTask(startLauncher);
 
+		if (index <= 1)
+		{
+			float powerUp = motor[LauncherUp1];
+			float powerDown = motor[LauncherDown1];
+			
+			float powerUpNew = powerUp * 0.9;
+			float powerDownNew = powerDown * 0.9;
+			
+			motor[LauncherUp1] = powerUpNew;
+			motor[LauncherUp2] = powerUpNew;
+			motor[LauncherDown1] = powerDownNew;
+			motor[LauncherDown2] = powerDownNew;
+		}
+		/*if (time1[T3] > 2000 && index > 0)
+		{
+			MakeLauncherIdle();
+			ClearTimer(T3);
+
+		}*/
+		
+		if (SensorValue[touchSensorLoaded] == 1 && time1[T3] > 1000)
+		{
+			writeDebugStreamLine("index:%d, T3: %d", ++index, time1[T3]);
+			ClearTimer(T3);
+
+		}
+		
+	}
 	//wait1Msec(13000);
 
 		wait1Msec(120000);
 
 	StartTask(stopLauncher);
 	StartTask(stopBelt);
+}
+
+
+void MakeLauncherIdle()
+{
+	int powerMidBelt = motor[MidBelt];
+	int powerTopBelt = motor[TopBelt];
+	motor[MidBelt] = 0;
+	motor[TopBelt] = motor[BottomBelt] = 0;
+		
+	StopTask(startMidBelt);
+
+	float powerUp = motor[LauncherUp1];
+	float powerDown = motor[LauncherDown1];
+	
+	float powerUpNew = powerUp * 0.6;
+	float powerDownNew = powerDown * 0.6;
+	
+	motor[LauncherUp1] = powerUpNew;
+	motor[LauncherUp2] = powerUpNew;
+	motor[LauncherDown1] = powerDownNew;
+	motor[LauncherDown2] = powerDownNew;
+	
+	wait1Msec(500);
+
+	motor[LauncherUp1] = powerUp;
+	motor[LauncherUp2] = powerUp;
+	motor[LauncherDown1] = powerDown;
+	motor[LauncherDown2] = powerDown;
+	
+	//wait1Msec(1000);
+
+	//resumeTask(startMidBelt);
+
+	motor[MidBelt] = powerMidBelt;
+	motor[TopBelt] = motor[BottomBelt] = powerTopBelt;
+		
 }
 
 
@@ -1040,7 +1110,7 @@ int GetPowerFlywheelUp()
 	case Far: { power = 63; break; }
 	case Middle: { power = 50; break; }
 	case Near: { power = 53; break; }
-	case AutonomousMode: { power = 64; break; }
+	case AutonomousMode: { power = 67; break; }
 	case AutonomousModeShort: { power = 0; break; }
 	case Skill: { power = 73; break; } // Good(80,50)
 	case UserControlMode: { power = 68; break; }
@@ -1067,7 +1137,7 @@ int GetPowerFlywheelDown()
 	case Far: { power = 65; break; }
 	case Middle: { power = 50; break; }
 	case Near: { power = 53; break; }
-	case AutonomousMode: { power = 64; break; }
+	case AutonomousMode: { power = 68; break; }
 	case AutonomousModeShort: { power = 75; break; }
 	case Skill: { power = 73; break; }
 	case UserControlMode: { power = 68; break; }
@@ -1132,7 +1202,7 @@ int GetBeltPower()
 	case Slow: { power = 30; break; }
 	case Skill: { power = 40; break; }
 	case UserControlMode: { power = 30; break; }
-	case AutonomousMode: { power = 40; break; }
+	case AutonomousMode: { power = 45; break; }
 	case AutonomousModeShort: { power = 30; break; }
 	default: { power = 35; break; }
 	}
