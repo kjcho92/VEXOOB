@@ -178,11 +178,14 @@ task launchBall_UserControl()
 			float powerUp = motor[LauncherUp1];
 			float powerDown = motor[LauncherDown1];
 
-			//float powerUpNew = powerUp * 0.9;
-			//float powerDownNew = powerDown * 0.9;
-
 			float powerUpNew = powerUp * 1.0;
-			float powerDownNew = powerDown * 1.04;
+			float powerDownNew = powerDown * 1.0;
+
+			if (true)
+			{ // low battery
+				powerUpNew = powerUp * 0.9;
+				//powerDownNew = powerDown * 0.9;
+			}
 
 			motor[LauncherUp1] = powerUpNew;
 			motor[LauncherUp2] = powerUpNew;
@@ -620,7 +623,8 @@ int GetPowerFlywheelUp()
 	case AutonomousMode: { power = 63; break; }
 	case AutonomousModeShort: { power = 0; break; }
 	case Skill: { power = 73; break; } // Good(80,50)
-	case UserControlMode: { power = 64; break; }
+	case UserControlMode: { power = 65; break; }
+	//case UserControlMode: { power = 64; break; } //Good
 	case WarmUP: { power = 35; break; }
 	case WarmUP2: { power = 60; break; }
 	case Test: { power = 40; break; }
@@ -649,7 +653,8 @@ int GetPowerFlywheelDown()
 	case AutonomousMode: { power = 64; break; }
 	case AutonomousModeShort: { power = 75; break; }
 	case Skill: { power = 73; break; }
-	case UserControlMode: { power = 65; break; }
+	case UserControlMode: { power = 66; break; }
+	//case UserControlMode: { power = 65; break; } // Good
 	case WarmUP: { power = 35; break; }
 	case WarmUP2: { power = 60; break; }
 	case Test: { power = 40; break; }
