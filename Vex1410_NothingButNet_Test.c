@@ -131,7 +131,7 @@ task autonomous()
 	BeltSpeed = AutonomousMode;
 
 	StartTask(startLauncher);
-	wait1Msec(1700);
+	wait1Msec(1100);
 
 	StartTask(startBelt);
 	StartTask(startMidBelt);
@@ -167,6 +167,8 @@ task launchBall_UserControl()
 	//wait1Msec(1000);
 
 	int index = 0;
+	
+
 	while(true)
 	{
 		StartTask(startLauncher);
@@ -176,8 +178,11 @@ task launchBall_UserControl()
 			float powerUp = motor[LauncherUp1];
 			float powerDown = motor[LauncherDown1];
 
-			float powerUpNew = powerUp * 0.9;
-			float powerDownNew = powerDown * 0.9;
+			//float powerUpNew = powerUp * 0.9;
+			//float powerDownNew = powerDown * 0.9;
+
+			float powerUpNew = powerUp * 1.0;
+			float powerDownNew = powerDown * 1.04;
 
 			motor[LauncherUp1] = powerUpNew;
 			motor[LauncherUp2] = powerUpNew;
@@ -193,7 +198,10 @@ task launchBall_UserControl()
 
 		if (SensorValue[touchSensorLoaded] == 1 && time1[T3] > 1300)
 		{
-			writeDebugStreamLine("index:%d, T3: %d", ++index, time1[T3]);
+			float powerUp = motor[LauncherUp1];
+			float powerDown = motor[LauncherDown1];
+
+			writeDebugStreamLine("index:%d, T3: %d, PowerUp: %d, PowerDown: %d", ++index, time1[T3], powerUp, powerDown);
 			ClearTimer(T3);
 		}
 
@@ -609,7 +617,7 @@ int GetPowerFlywheelUp()
 	case Far: { power = 68; break; }
 	case Middle: { power = 50; break; }
 	case Near: { power = 53; break; }
-	case AutonomousMode: { power = 68; break; }
+	case AutonomousMode: { power = 63; break; }
 	case AutonomousModeShort: { power = 0; break; }
 	case Skill: { power = 73; break; } // Good(80,50)
 	case UserControlMode: { power = 64; break; }
@@ -619,11 +627,13 @@ int GetPowerFlywheelUp()
 	default: { power = 85; break; }
 	}
 
-	power = power + LauncherPowerOffset * 0.05;
-	int adjustedPower = AdjustPowerUsingBatteryLevel(power);
+	int newPower = power + (power * LauncherPowerOffset * 0.05);
+	int adjustedPower = AdjustPowerUsingBatteryLevel(newPower);
 
-	//writeDebugStream("adjustedPower UP: %d, powerRaw: %d", adjustedPower, power);
-
+	if (false && LauncherPowerOffset != 0)
+	{
+		writeDebugStreamLine("adjustedPower UP: LauncherPowerOffset: %d, power: %d -> %d", LauncherPowerOffset, power, newPower);
+	}
 	return adjustedPower;
 }
 
@@ -636,7 +646,7 @@ int GetPowerFlywheelDown()
 	case Far: { power = 68; break; }
 	case Middle: { power = 50; break; }
 	case Near: { power = 53; break; }
-	case AutonomousMode: { power = 68; break; }
+	case AutonomousMode: { power = 64; break; }
 	case AutonomousModeShort: { power = 75; break; }
 	case Skill: { power = 73; break; }
 	case UserControlMode: { power = 65; break; }
@@ -646,11 +656,13 @@ int GetPowerFlywheelDown()
 	default: { power = 0; break; }
 	}
 
-	power = power + LauncherPowerOffset * 0.05;
+	int newPower = power + (power * LauncherPowerOffset * 0.05);
 	int adjustedPower = AdjustPowerUsingExternalBatteryLevel(power) ;
 
-	//writeDebugStreamLine(",	adjustedPower Down: %d, PowerRaw: %d ", adjustedPower, power);
-
+	if (false && LauncherPowerOffset != 0)
+	{
+		writeDebugStreamLine("adjustedPower Down: LauncherPowerOffset: %d, power: %d -> %d", LauncherPowerOffset, power, newPower);
+	}
 	return adjustedPower;
 
 	/*
@@ -683,7 +695,7 @@ int GetMidBeltPower()
 	case Slow: { power = 25; break; }
 	case Skill: { power = 32; break; }
 	case UserControlMode: { power = 25; break; }
-	case AutonomousMode: { power = 28; break; }
+	case AutonomousMode: { power = 25; break; }
 	default: { power = 28; break; }
 	}
 
@@ -878,44 +890,62 @@ task usercontrol()
 		}
 		else if (btn8u == 1 && time1[T3] > 400)
 		{
+			writeDebugStreamLine("Up Pressed!");
 			ClearTimer(T3);
-			//LauncherPowerOffset++;
 
 			float powerUp = motor[LauncherUp1];
 			float powerDown = motor[LauncherDown1];
 
-			float powerUpNew = powerUp * 1.05;
-			float powerDownNew = powerDown * 1.05;
+			if (powerUp + powerDown > 0)
+			{
+				if (true)
+				{
+					LauncherPowerOffset++;
+					StartTask(startLauncher);
+				}
+				else
+				{
+					float powerUpNew = powerUp * 1.05;
+					float powerDownNew = powerDown * 1.05;
 
-			writeDebugStreamLine("^^^^^^^^^^^ Speed Up %d -> %d", powerUp, powerUpNew);
+					writeDebugStreamLine("^^^^^^^^^^^ Speed Up %d -> %d", powerUp, powerUpNew);
 
 
-			motor[LauncherUp1] = powerUpNew;
-			motor[LauncherUp2] = powerUpNew;
-			motor[LauncherDown1] = powerDownNew;
-			motor[LauncherDown2] = powerDownNew;
-
-
+					motor[LauncherUp1] = powerUpNew;
+					motor[LauncherUp2] = powerUpNew;
+					motor[LauncherDown1] = powerDownNew;
+					motor[LauncherDown2] = powerDownNew;
+				}
+			}
 		}
 		else if (btn8d == 1 && time1[T3] > 400)
 		{
+			writeDebugStreamLine("Down Pressed!");
 			ClearTimer(T3);
-			//LauncherPowerOffset--;
 
 			float powerUp = motor[LauncherUp1];
 			float powerDown = motor[LauncherDown1];
 
-			float powerUpNew = powerUp * 0.95;
-			float powerDownNew = powerDown * 0.95;
+			if (powerUp + powerDown > 0)
+			{
+				if (true)
+				{
+					LauncherPowerOffset--;
+					StartTask(startLauncher);
+				}
+				else
+				{
+					float powerUpNew = powerUp * 0.95;
+					float powerDownNew = powerDown * 0.95;
 
-			writeDebugStreamLine("````````````` Speed Down %d -> %d", powerUp, powerUpNew);
+					writeDebugStreamLine("````````````` Speed Down %d -> %d", powerUp, powerUpNew);
 
-			motor[LauncherUp1] = powerUpNew;
-			motor[LauncherUp2] = powerUpNew;
-			motor[LauncherDown1] = powerDownNew;
-			motor[LauncherDown2] = powerDownNew;
-
-
+					motor[LauncherUp1] = powerUpNew;
+					motor[LauncherUp2] = powerUpNew;
+					motor[LauncherDown1] = powerDownNew;
+					motor[LauncherDown2] = powerDownNew;
+				}
+			}
 			//BeltSpeed = Slow;
 			//StartTask(startBelt);
 		}
