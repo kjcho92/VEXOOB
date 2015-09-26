@@ -1,6 +1,6 @@
 #pragma config(I2C_Usage, I2C1, i2cSensors)
 #pragma config(Sensor, in1,    ExternalBatteryValue, sensorAnalog)
-#pragma config(Sensor, dgtl1,  touchSensorLaunched, sensorTouch)
+#pragma config(Sensor, dgtl1,  touchSensorLaunched, sensorNone)
 #pragma config(Sensor, dgtl2,  touchSensorLoaded, sensorTouch)
 #pragma config(Sensor, I2C_1,  ,               sensorQuadEncoderOnI2CPort,    , AutoAssign)
 #pragma config(Sensor, I2C_2,  ,               sensorQuadEncoderOnI2CPort,    , AutoAssign)
@@ -20,7 +20,7 @@
 
 //Competition Control and Duration Settings
 #pragma competitionControl(Competition)
-#pragma autonomousDuration(10)
+#pragma autonomousDuration(60)
 #pragma userControlDuration(120)
 
 #include "Vex_Competition_Includes.c"   //Main competition background code...do not modify!
@@ -121,7 +121,7 @@ void pre_auton()
 //
 /////////////////////////////////////////////////////////////////////////////////////////
 
-task autonomous()
+task autonomous_old()
 {
 
 	WarmUpLauncher();
@@ -136,6 +136,73 @@ task autonomous()
 	StartTask(startBelt);
 	StartTask(startMidBelt);
 
+	//wait1Msec(13000);
+
+	//wait1Msec(120000);
+
+	//StartTask(stopLauncher);
+	//StartTask(stopBelt);
+}
+
+task autonomous()
+{
+
+	WarmUpLauncher();
+	//wait1Msec(1000);
+
+	LauncherRange = UserControlMode;
+	BeltSpeed = UserControlMode;
+	
+	StartTask(startLauncher);
+	wait1Msec(1100);
+
+	StartTask(startBelt);
+	StartTask(startMidBelt);
+	
+	int index = 0;
+
+	while(true)
+	{
+		StartTask(startLauncher);
+
+		if (index <= 1)
+		{
+			float powerUp = motor[LauncherUp1];
+			float powerDown = motor[LauncherDown1];
+
+			float powerUpNew = powerUp * 1.0;
+			float powerDownNew = powerDown * 1.0;
+
+			if (false)
+			{ // low battery
+				powerUpNew = powerUp * 0.9;
+				//powerDownNew = powerDown * 0.9;
+			}
+
+			motor[LauncherUp1] = powerUpNew;
+			motor[LauncherUp2] = powerUpNew;
+			motor[LauncherDown1] = powerDownNew;
+			motor[LauncherDown2] = powerDownNew;
+		}
+		/*if (time1[T3] > 2000 && index > 0)
+		{
+		MakeLauncherIdle();
+		ClearTimer(T3);
+
+		}*/
+
+		if (SensorValue[touchSensorLoaded] == 1 && time1[T3] > 1300)
+		{
+			float powerUp = motor[LauncherUp1];
+			float powerDown = motor[LauncherDown1];
+
+			writeDebugStreamLine("index:%d, T3: %d, PowerUp: %d, PowerDown: %d", ++index, time1[T3], powerUp, powerDown);
+			ClearTimer(T3);
+		}
+
+	}
+	//wait1Msec(13000);
+	
 	//wait1Msec(13000);
 
 	//wait1Msec(120000);
@@ -167,7 +234,7 @@ task launchBall_UserControl()
 	//wait1Msec(1000);
 
 	int index = 0;
-	
+
 
 	while(true)
 	{
@@ -267,7 +334,7 @@ task launchBall()
 
 	float launcherUp;
 	float launcherDown;
-			
+
 	ClearTimer(T1);
 	ClearEncoder();
 	ClearTimer(T2);
@@ -282,42 +349,42 @@ task launchBall()
 		//	launcherUp = GetEncoderLauncherUp();
 		//	launcherDown = GetEncoderLauncherDown();
 		//	writeDebugStreamLine("Up: %d, Down: %d", launcherUp, launcherDown);
-			
+
 		//	ClearTimer(T1);
 		//	ClearEncoder();
 		//}
-	
+
 		if (time1[T1] >= 1500 && SensorValue[touchSensorLoaded] == 1)
 		{
 			loaded = true;
 			//wait1Msec(30);
 
 		  //writeDebugStreamLine(">>>>>>>>> Launched");
-			
+
 			//StartTask(startLauncher);
 			//MakeLauncherIdle();
 			//ClearTimer(T1);
 			//ClearTimer(T2);
-			
+
 		  ClearTimer(T3);
 			StartTask(startLauncher);
 
 			int powerMidBelt = motor[MidBelt];
 			int powerTopBelt = motor[TopBelt];
-			
+
 			motor[MidBelt] = 0;
 			motor[TopBelt] = motor[BottomBelt] = 0;
-		
+
 			ClearEncoder();
 			wait1Msec(200);
 			launcherUp = GetEncoderLauncherUp();
 			launcherDown = GetEncoderLauncherDown();
 
 			AdjustSkill(launcherUp, launcherDown);
-			
-			
+
+
 			writeDebugStreamLine(">>>>>>>>> Launched: T3:%d, index: %d,  Up: %d, Down: %d", time1[T3], index++, launcherUp, launcherDown);
-			
+
 			motor[MidBelt] = powerMidBelt;
 			motor[TopBelt] = motor[BottomBelt] = powerTopBelt;
 
@@ -337,10 +404,10 @@ task launchBall()
 			//writeDebugStreamLine("<<<<<<<<< Idle Launcher Started");
 			MakeLauncherIdle();
 			writeDebugStreamLine("<<<<<<<<< Idle Launcher Done");
-						
+
 			ClearTimer(T2);
 		}*/
-		
+
 	}
 }
 
@@ -619,11 +686,11 @@ int GetPowerFlywheelUp()
 	{
 	case Far: { power = 68; break; }
 	case Middle: { power = 50; break; }
-	case Near: { power = 53; break; }
+	case Near: { power = 50; break; }
 	case AutonomousMode: { power = 63; break; }
 	case AutonomousModeShort: { power = 0; break; }
 	case Skill: { power = 73; break; } // Good(80,50)
-	case UserControlMode: { power = 65; break; }
+	case UserControlMode: { power = 65; break; } // Low battery
 	//case UserControlMode: { power = 64; break; } //Good
 	case WarmUP: { power = 35; break; }
 	case WarmUP2: { power = 60; break; }
@@ -649,11 +716,11 @@ int GetPowerFlywheelDown()
 	{
 	case Far: { power = 68; break; }
 	case Middle: { power = 50; break; }
-	case Near: { power = 53; break; }
+	case Near: { power = 50; break; }
 	case AutonomousMode: { power = 64; break; }
 	case AutonomousModeShort: { power = 75; break; }
 	case Skill: { power = 73; break; }
-	case UserControlMode: { power = 66; break; }
+	case UserControlMode: { power = 66; break; } // Low battery
 	//case UserControlMode: { power = 65; break; } // Good
 	case WarmUP: { power = 35; break; }
 	case WarmUP2: { power = 60; break; }
@@ -1027,7 +1094,7 @@ void WarmUpLauncher()
 	float power = motor[LauncherDown1];
 	int power_Down = GetPowerFlywheelDown();
 	if (power < power_Down)
-	{		
+	{
 		//writeDebugStream("WarmUP started\t");
 
 		LauncherRange = WarmUP;
@@ -1082,7 +1149,7 @@ void StartAndControlLauncher()
 
 		if (btn8u > 0)
 		{
-			powerOffset++; 
+			powerOffset++;
 		}
 		else if (btn8d > 0)
 		{
