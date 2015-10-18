@@ -1,5 +1,6 @@
 #pragma config(Sensor, in1,    ExternalBatteryValue, sensorAnalog)
 #pragma config(Sensor, in2,    LauncherPosition, sensorPotentiometer)
+#pragma config(Sensor, in3,    BallDispenserPosition, sensorPotentiometer)
 #pragma config(Sensor, dgtl3,  BallLoaded,     sensorTouch)
 #pragma config(Motor,  port1,           Belt,          tmotorVex393_HBridge, openLoop)
 #pragma config(Motor,  port4,           Launcher1,     tmotorVex393_MC29, openLoop, reversed)
@@ -27,6 +28,34 @@
 //
 /////////////////////////////////////////////////////////////////////////////////////////
 
+task LauncherUp();
+task LauncherStop();
+task LauncherDown();
+task LaunchBall();
+task StopBelt();
+task DispenseBall();
+task OpenDispenser();
+task CloseDispenser();
+task MoveBeltToReadyBall();
+task AutoLaunchBall();
+
+// Global variables
+
+// For a new rubber band
+//int powerToDownLauncher = 76; 
+//int powerToLaunch = 81;
+//int powerToStay = 19;
+
+// For a used rubber band
+int powerToDownLauncher = 76;
+int powerToLaunch = 82;
+int powerToStay = 19;
+
+
+void StopOrReverseBelt();
+int AdjustPowerUsingBatteryLevel(int originalPower);
+int AdjustPowerUsingExternalBatteryLevel(int originalPower);
+
 void pre_auton()
 {
 	// Set bStopTasksBetweenModes to false if you want to keep user created tasks running between
@@ -52,7 +81,78 @@ task autonomous()
 	// Insert user code here.
 	// .....................................................................................
 
-	AutonomousCodePlaceholderForTesting();  // Remove this function call once you have "real" code.
+	int i = 0;
+	while(true)
+	{
+		if (i > 3)
+		{
+			break;
+		}
+		motor[Belt] = -80;
+		wait1Msec(100);
+		motor[Belt] = 0;
+
+
+		//int launcherPosition = SensorValue[LauncherPosition]; 
+		//writeDebugStreamLine("LaunchBall) launcherPosition :%d", launcherPosition);
+
+		int originalPower = powerToDownLauncher; // power to down the launcher
+		int primaryPower = AdjustPowerUsingBatteryLevel(originalPower);
+		int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower);
+		writeDebugStreamLine("LauncherUp) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
+
+		motor[Launcher1] = externalPower;
+		motor[Launcher2] = externalPower;
+		motor[Launcher3] = primaryPower;
+		motor[Launcher4] = primaryPower;
+		//motor[Launcher5] = power;
+		//motor[Launcher6] = power;
+
+		clearTimer(T3);
+		while(SensorValue[LauncherPosition] > 1300 && time1[T3] < 1000)
+		{
+		}
+
+		originalPower = powerToStay;
+		primaryPower = AdjustPowerUsingBatteryLevel(originalPower);
+		externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower);
+		writeDebugStreamLine("LauncherUp) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
+
+		motor[Launcher1] = externalPower;
+		motor[Launcher2] = externalPower;
+		motor[Launcher3] = primaryPower;
+		motor[Launcher4] = primaryPower;
+		//motor[Launcher5] = power;
+		//motor[Launcher6] = power;
+
+		startTask(OpenDispenser);
+
+		startTask(MoveBeltToReadyBall);
+
+		clearTimer(T3);
+		while(SensorValue[BallLoaded] == 0 && time1[T3] < 2000)
+		{
+		}
+
+		startTask(CloseDispenser);
+
+		if(time1[T3] >= 2000)
+		{
+			startTask(LauncherStop);
+
+		}
+		else
+		{
+			wait1Msec(1000);
+			startTask(LauncherUp);
+
+			wait1Msec(150);
+			startTask(LauncherStop);
+
+			i++;
+		}
+		wait1Msec(1000);
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -63,16 +163,6 @@ task autonomous()
 // You must modify the code to add your own robot specific commands here.
 //
 /////////////////////////////////////////////////////////////////////////////////////////
-
-task LauncherUp();
-task LauncherStop();
-task LauncherDown();
-task LaunchBall();
-task StopBelt();
-task DispenseBall();
-task CloseDispenser();
-
-void StopOrReverseBelt();
 
 task LauncherUp_Short()
 {
@@ -190,7 +280,7 @@ task LauncherUp()
 	}
 	else
 	{ // 1 rubber band and short
-		int originalPower = 84;
+		int originalPower = powerToLaunch;
 
 		int primaryPower = AdjustPowerUsingBatteryLevel(originalPower) * -1;
 		int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower) * -1;
@@ -227,7 +317,7 @@ task LauncherDown()
 {// T3
 	//int power = 70; // perfect but strong
 
-	int originalPower = 57;
+	int originalPower = powerToDownLauncher;
 	int primaryPower = AdjustPowerUsingBatteryLevel(originalPower);
 	int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower);
 	writeDebugStreamLine("LauncherUp) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
@@ -239,9 +329,12 @@ task LauncherDown()
 	//motor[Launcher5] = power;
 	//motor[Launcher6] = power;
 
-	wait1Msec(300);
+	clearTimer(T3);
+	while(SensorValue[LauncherPosition] > 1300 && time1[T3] < 1000)
+	{
+	}
 
-	originalPower = 18;		
+	originalPower = powerToStay;		
 	primaryPower = AdjustPowerUsingBatteryLevel(originalPower);
 	externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower);
 	writeDebugStreamLine("LauncherUp) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
@@ -275,7 +368,7 @@ task LaunchBall()
 		//int launcherPosition = SensorValue[LauncherPosition]; 
 		//writeDebugStreamLine("LaunchBall) launcherPosition :%d", launcherPosition);
 
-		int originalPower = 70;
+		int originalPower = powerToDownLauncher; // power to down the launcher
 		int primaryPower = AdjustPowerUsingBatteryLevel(originalPower);
 		int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower);
 		writeDebugStreamLine("LauncherUp) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
@@ -291,8 +384,8 @@ task LaunchBall()
 		while(SensorValue[LauncherPosition] > 1300 && time1[T3] < 1000)
 		{
 		}
-		
-		originalPower = 18;
+
+		originalPower = powerToStay;
 		primaryPower = AdjustPowerUsingBatteryLevel(originalPower);
 		externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower);
 		writeDebugStreamLine("LauncherUp) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
@@ -369,11 +462,29 @@ task usercontrol()
 			startTask(LaunchBall);
 		}
 		else if (btn8r == 1)
-		{
-			stopTask(LauncherUp);
-			stopTask(LauncherDown);
-			stopTask(LaunchBall);
-			startTask(LauncherStop);
+		{// Open or Close the ball dispenser
+			if (SensorValue[BallDispenserPosition] >= 1300)
+			{ // Open
+				motor[BallDispenser] = 55;
+
+				clearTimer(T2);
+				while(SensorValue[BallDispenserPosition] > 1047 && time1[T2] < 5000)
+				{
+				}
+
+				motor[BallDispenser] = 0;
+			}
+			else
+			{	// Close
+				motor[BallDispenser] = -55;
+
+				clearTimer(T2);
+				while(SensorValue[BallDispenserPosition] < 1590 && time1[T2] < 5000)
+				{
+				}
+
+				motor[BallDispenser] = 0;
+			}
 		}
 		else if (btn6u == 1)
 		{
@@ -387,17 +498,18 @@ task usercontrol()
 		}
 		else if (btn5u == 1)
 		{
-
-			startTask(DispenseBall);
-			//motor[BallDispenser] = -40;
-			//wait1Msec(100);
-			//motor[BallDispenser] = 0;
+			startTask(AutoLaunchBall);
+			//startTask(DispenseBall);
 		}
 		else if (btn5d == 1)
 		{
-			motor[BallDispenser] = 40;
-			wait1Msec(100);
-			motor[BallDispenser] = 0;
+			motor[Belt] = 0;
+			stopTask(LauncherUp);
+			stopTask(LauncherDown);
+			stopTask(LaunchBall);
+			stopTask(AutoLaunchBall);
+			startTask(LauncherStop);
+			startTask(CloseDispenser);		
 		}
 	}
 }
@@ -434,11 +546,10 @@ task DispenseBall()
 	wait1Msec(100);
 	motor[Belt] = 0;
 
-	wait1Msec(50);
 
-	motor[BallDispenser] = 55;
-	wait1Msec(300);
-	motor[BallDispenser] = 0;
+	startTask(OpenDispenser);
+
+	wait1Msec(50);
 
 	motor[Belt] = 80;
 
@@ -448,14 +559,109 @@ task DispenseBall()
 	motor[Belt] = 0;
 }
 
+task OpenDispenser()
+{// T2
+	motor[BallDispenser] = 55;
 
-task CloseDispenser()
-{// T3
 	clearTimer(T2);
-	while(SensorValue[BallLoaded] == 0 && time1[T2] < 3000)
+	while(SensorValue[BallDispenserPosition] > 1047 && time1[T2] < 5000)
 	{
 	}
-	motor[BallDispenser] = -55;
-	wait1Msec(300);
+
 	motor[BallDispenser] = 0;
+
+}
+
+task CloseDispenser()
+{// T2
+	//clearTimer(T2);
+	//while(SensorValue[BallLoaded] == 0 && time1[T2] < 3000)
+	//{
+	//}
+
+	motor[BallDispenser] = -55;
+
+	clearTimer(T2);
+	while(SensorValue[BallDispenserPosition] < 1590 && time1[T2] < 5000)
+	{
+	}
+
+	motor[BallDispenser] = 0;
+}
+
+task AutoLaunchBall()
+{ // T2
+	motor[Belt] = -100;
+	wait1Msec(100);
+	motor[Belt] = 0;
+
+	//int launcherPosition = SensorValue[LauncherPosition];
+	//writeDebugStreamLine("LaunchBall) launcherPosition :%d", launcherPosition);
+
+	int originalPower = powerToDownLauncher; // power to down the launcher
+	int primaryPower = AdjustPowerUsingBatteryLevel(originalPower);
+	int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower);
+	writeDebugStreamLine("LauncherUp) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
+
+	motor[Launcher1] = externalPower;
+	motor[Launcher2] = externalPower;
+	motor[Launcher3] = primaryPower;
+	motor[Launcher4] = primaryPower;
+	//motor[Launcher5] = power;
+	//motor[Launcher6] = power;
+
+	clearTimer(T3);
+	while(SensorValue[LauncherPosition] > 1300 && time1[T3] < 1000)
+	{
+	}
+
+	originalPower = powerToStay;
+	primaryPower = AdjustPowerUsingBatteryLevel(originalPower);
+	externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower);
+	writeDebugStreamLine("LauncherUp) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
+
+	motor[Launcher1] = externalPower;
+	motor[Launcher2] = externalPower;
+	motor[Launcher3] = primaryPower;
+	motor[Launcher4] = primaryPower;
+	//motor[Launcher5] = power;
+	//motor[Launcher6] = power;
+
+	startTask(OpenDispenser);
+
+	startTask(MoveBeltToReadyBall);
+
+	clearTimer(T3);
+	while(SensorValue[BallLoaded] == 0 && time1[T3] < 3000)
+	{
+	}
+
+	startTask(CloseDispenser);
+
+	if(time1[T3] >= 3000)
+	{
+		startTask(LauncherStop);
+
+	}
+	else
+	{
+		wait1Msec(800);
+		startTask(LauncherUp);
+
+		wait1Msec(150);
+		startTask(LauncherStop);
+	}
+}
+
+task MoveBeltToReadyBall()
+{// T4
+	motor[Belt] = 60;
+
+	clearTimer(T4);
+	while(time1[T4] < 3000)
+	{
+	}
+
+	motor[Belt] = 0;
+
 }
