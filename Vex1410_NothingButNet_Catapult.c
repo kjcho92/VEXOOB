@@ -84,10 +84,13 @@ task autonomous()
 	int i = 0;
 	while(true)
 	{
+		// Repeat for 4 times (4 preloads)
 		if (i > 3)
 		{
 			break;
 		}
+		
+		// move backward to aligh balls
 		motor[Belt] = -80;
 		wait1Msec(100);
 		motor[Belt] = 0;
@@ -96,6 +99,7 @@ task autonomous()
 		//int launcherPosition = SensorValue[LauncherPosition]; 
 		//writeDebugStreamLine("LaunchBall) launcherPosition :%d", launcherPosition);
 
+		// DOwn the launcher
 		int originalPower = powerToDownLauncher; // power to down the launcher
 		int primaryPower = AdjustPowerUsingBatteryLevel(originalPower);
 		int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower);
@@ -107,12 +111,14 @@ task autonomous()
 		motor[Launcher4] = primaryPower;
 		//motor[Launcher5] = power;
 		//motor[Launcher6] = power;
-
+		
+		// Down until it is lower than the position (1300)
 		clearTimer(T3);
 		while(SensorValue[LauncherPosition] > 1300 && time1[T3] < 1000)
 		{
 		}
 
+		// Down and stay waiting a ball loaded
 		originalPower = powerToStay;
 		primaryPower = AdjustPowerUsingBatteryLevel(originalPower);
 		externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower);
@@ -125,17 +131,22 @@ task autonomous()
 		//motor[Launcher5] = power;
 		//motor[Launcher6] = power;
 
+		// Open the dispenser
 		startTask(OpenDispenser);
-
+		
+		// Move the fall forward to make a ball ready
 		startTask(MoveBeltToReadyBall);
 
+		// Wait until a ball loaded
 		clearTimer(T3);
 		while(SensorValue[BallLoaded] == 0 && time1[T3] < 2000)
 		{
 		}
 
+		// Close the dispenser
 		startTask(CloseDispenser);
 
+		// Timeout and move the launcher to the original position
 		if(time1[T3] >= 2000)
 		{
 			startTask(LauncherStop);
@@ -143,14 +154,17 @@ task autonomous()
 		}
 		else
 		{
+			// Ball is loaded, launch the ball
 			wait1Msec(1000);
 			startTask(LauncherUp);
 
 			wait1Msec(150);
 			startTask(LauncherStop);
 
+			// Increase
 			i++;
 		}
+		// Delay for 1 sec before the nexr launch
 		wait1Msec(1000);
 	}
 }
