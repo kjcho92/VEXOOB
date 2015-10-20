@@ -38,6 +38,7 @@ task OpenDispenser();
 task CloseDispenser();
 task MoveBeltToReadyBall();
 task AutoLaunchBall();
+task displayBatteryLevelOnLCD();
 
 // Global variables
 
@@ -47,11 +48,11 @@ task AutoLaunchBall();
 //int powerToStay = 19;
 
 // For a used rubber band
-int powerToDownLauncher = 76;
-int powerToLaunch = 82;
-int powerToStay = 19;
+int powerToDownLauncher = 67;
+int powerToLaunch = 89;
+int powerToStay = 18;
 
-int postionToDown = 1278;
+int postionToDown = 1330;
 
 void StopOrReverseBelt();
 int AdjustPowerUsingBatteryLevel(int originalPower);
@@ -159,8 +160,8 @@ task autonomous()
 			wait1Msec(1000);
 			startTask(LauncherUp);
 
-			wait1Msec(150);
-			startTask(LauncherStop);
+			//wait1Msec(150);
+			//startTask(LauncherStop);
 
 			// Increase
 			i++;
@@ -336,8 +337,7 @@ task LauncherUp()
 		//motor[Launcher5] = power;
 		//motor[Launcher6] = power;
 
-		wait1Msec(150);
-
+		wait1Msec(100);
 
 		startTask(LauncherStop);
 
@@ -363,7 +363,7 @@ task LauncherDown()
 	int originalPower = powerToDownLauncher;
 	int primaryPower = AdjustPowerUsingBatteryLevel(originalPower);
 	int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower);
-	writeDebugStreamLine("LauncherUp) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
+	writeDebugStreamLine("LauncherDown) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
 
 	motor[Launcher1] = externalPower;
 	motor[Launcher2] = externalPower;
@@ -380,7 +380,7 @@ task LauncherDown()
 	originalPower = powerToStay;
 	primaryPower = AdjustPowerUsingBatteryLevel(originalPower);
 	externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower);
-	writeDebugStreamLine("LauncherUp) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
+	writeDebugStreamLine("LauncherDown) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
 
 	motor[Launcher1] = externalPower;
 	motor[Launcher2] = externalPower;
@@ -414,7 +414,7 @@ task LaunchBall()
 		int originalPower = powerToDownLauncher; // power to down the launcher
 		int primaryPower = AdjustPowerUsingBatteryLevel(originalPower);
 		int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower);
-		writeDebugStreamLine("LauncherUp) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
+		writeDebugStreamLine("LaunchBall) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
 
 		motor[Launcher1] = externalPower;
 		motor[Launcher2] = externalPower;
@@ -431,7 +431,7 @@ task LaunchBall()
 		originalPower = powerToStay;
 		primaryPower = AdjustPowerUsingBatteryLevel(originalPower);
 		externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower);
-		writeDebugStreamLine("LauncherUp) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
+		writeDebugStreamLine("LaunchBall) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
 
 		motor[Launcher1] = externalPower;
 		motor[Launcher2] = externalPower;
@@ -454,8 +454,8 @@ task LaunchBall()
 			wait1Msec(500);
 			startTask(LauncherUp);
 
-			wait1Msec(150);
-			startTask(LauncherStop);
+			//wait1Msec(150);
+			//startTask(LauncherStop);
 
 		}
 		wait1Msec(300);
@@ -558,7 +558,7 @@ task usercontrol()
 			stopTask(LaunchBall);
 			stopTask(AutoLaunchBall);
 			startTask(LauncherStop);
-			startTask(CloseDispenser);
+			//startTask(CloseDispenser);
 		}
 	}
 }
@@ -697,8 +697,8 @@ task AutoLaunchBall()
 		wait1Msec(800);
 		startTask(LauncherUp);
 
-		wait1Msec(150);
-		startTask(LauncherStop);
+		//wait1Msec(150);
+		//startTask(LauncherStop);
 	}
 }
 
