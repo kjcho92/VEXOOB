@@ -42,7 +42,7 @@ task AutoLaunchBall();
 // Global variables
 
 // For a new rubber band
-//int powerToDownLauncher = 76; 
+//int powerToDownLauncher = 76;
 //int powerToLaunch = 81;
 //int powerToStay = 19;
 
@@ -51,6 +51,7 @@ int powerToDownLauncher = 76;
 int powerToLaunch = 82;
 int powerToStay = 19;
 
+int postionToDown = 1278;
 
 void StopOrReverseBelt();
 int AdjustPowerUsingBatteryLevel(int originalPower);
@@ -89,14 +90,14 @@ task autonomous()
 		{
 			break;
 		}
-		
+
 		// move backward to aligh balls
 		motor[Belt] = -80;
 		wait1Msec(100);
 		motor[Belt] = 0;
 
 
-		//int launcherPosition = SensorValue[LauncherPosition]; 
+		//int launcherPosition = SensorValue[LauncherPosition];
 		//writeDebugStreamLine("LaunchBall) launcherPosition :%d", launcherPosition);
 
 		// DOwn the launcher
@@ -111,10 +112,10 @@ task autonomous()
 		motor[Launcher4] = primaryPower;
 		//motor[Launcher5] = power;
 		//motor[Launcher6] = power;
-		
-		// Down until it is lower than the position (1300)
+
+		// Down until it is lower than the position (1055)
 		clearTimer(T3);
-		while(SensorValue[LauncherPosition] > 1300 && time1[T3] < 1000)
+		while(SensorValue[LauncherPosition] > postionToDown && time1[T3] < 1000)
 		{
 		}
 
@@ -133,7 +134,7 @@ task autonomous()
 
 		// Open the dispenser
 		startTask(OpenDispenser);
-		
+
 		// Move the fall forward to make a ball ready
 		startTask(MoveBeltToReadyBall);
 
@@ -177,6 +178,34 @@ task autonomous()
 // You must modify the code to add your own robot specific commands here.
 //
 /////////////////////////////////////////////////////////////////////////////////////////
+task displayBatteryLevelOnLCD()
+{
+	bLCDBacklight=true;
+
+	//while(true)                                                        // An infinite loop to keep the program running until you terminate it
+	//{
+		clearLCDLine(0);                                            // Clear line 1 (0) of the LCD
+		clearLCDLine(1);                                            // Clear line 2 (1) of the LCD
+
+		string mainBattery, externalBattery;
+
+		//Display the Primary Robot battery voltage
+		displayLCDString(0, 0, "Primary: ");
+		sprintf(mainBattery, "%1.2f%c", nImmediateBatteryLevel/1000.0,'V'); //Build the value to be displayed
+		displayNextLCDString(mainBattery);
+
+		//float externalBatteryLevel = SensorValue[ExternalBatteryValue];
+		//Display the Backup battery voltage
+		displayLCDString(1, 0, "External: ");
+		sprintf(externalBattery, "%1.2f%c", (SensorValue[ExternalBatteryValue] * 3.57)/1000.0, 'V');    //Build the value to be displayed
+		displayNextLCDString(externalBattery);
+
+		//Short delay for the LCD refresh rate
+		wait1Msec(5000);
+	//}
+
+		bLCDBacklight=false;
+}
 
 task LauncherUp_Short()
 {
@@ -344,11 +373,11 @@ task LauncherDown()
 	//motor[Launcher6] = power;
 
 	clearTimer(T3);
-	while(SensorValue[LauncherPosition] > 1300 && time1[T3] < 1000)
+	while(SensorValue[LauncherPosition] > postionToDown && time1[T3] < 1000)
 	{
 	}
 
-	originalPower = powerToStay;		
+	originalPower = powerToStay;
 	primaryPower = AdjustPowerUsingBatteryLevel(originalPower);
 	externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower);
 	writeDebugStreamLine("LauncherUp) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
@@ -379,7 +408,7 @@ task LaunchBall()
 {
 	while(true)
 	{
-		//int launcherPosition = SensorValue[LauncherPosition]; 
+		//int launcherPosition = SensorValue[LauncherPosition];
 		//writeDebugStreamLine("LaunchBall) launcherPosition :%d", launcherPosition);
 
 		int originalPower = powerToDownLauncher; // power to down the launcher
@@ -395,7 +424,7 @@ task LaunchBall()
 		//motor[Launcher6] = power;
 
 		clearTimer(T3);
-		while(SensorValue[LauncherPosition] > 1300 && time1[T3] < 1000)
+		while(SensorValue[LauncherPosition] > postionToDown && time1[T3] < 1000)
 		{
 		}
 
@@ -440,6 +469,12 @@ task usercontrol()
 	while (true)
 	{
 		wait1Msec(50);
+
+		int btnLCD = nLCDButtons;
+		if (btnLCD >= 1)
+	  {
+			startTask(displayBatteryLevelOnLCD);
+		}
 
 		int btn5u = vexRT[Btn5U]; // start belt
 		int btn5d = vexRT[Btn5D]; // start belt
@@ -523,7 +558,7 @@ task usercontrol()
 			stopTask(LaunchBall);
 			stopTask(AutoLaunchBall);
 			startTask(LauncherStop);
-			startTask(CloseDispenser);		
+			startTask(CloseDispenser);
 		}
 	}
 }
@@ -625,7 +660,7 @@ task AutoLaunchBall()
 	//motor[Launcher6] = power;
 
 	clearTimer(T3);
-	while(SensorValue[LauncherPosition] > 1300 && time1[T3] < 1000)
+	while(SensorValue[LauncherPosition] > postionToDown && time1[T3] < 1000)
 	{
 	}
 
