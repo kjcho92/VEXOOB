@@ -60,12 +60,12 @@ enum GameMode{
 
 // For a used rubber band
 GameMode LauncherRange = Far;
-int powerToDownLauncher = 65;
-int powerToLaunch = 90;
-int powerToLaunch_Short = 50;
-int powerToStay = 18;
+int powerToDownLauncher = 68;
+int powerToLaunch = 91;
+int powerToLaunch_Short = 40;
+int powerToStay = 19;
 
-int postionToDown = 1300;
+int postionToDown = 1280;
 
 void StopOrReverseBelt();
 int AdjustPowerUsingBatteryLevel(int originalPower);
@@ -107,7 +107,7 @@ task autonomous()
 		}
 
 		// move backward to aligh balls
-		motor[Belt] = -80;
+		motor[Belt] = -65;
 		wait1Msec(100);
 		motor[Belt] = 0;
 
@@ -165,8 +165,8 @@ task autonomous()
 		// Timeout and move the launcher to the original position
 		if(time1[T3] >= 2000)
 		{
-			startTask(LauncherStop);
-
+			startTask(LauncherUp);
+			//startTask(LauncherStop);
 		}
 		else
 		{
@@ -257,7 +257,7 @@ task LauncherUp()
 	//motor[Launcher5] = power;
 	//motor[Launcher6] = power;
 
-	wait1Msec(150);
+	wait1Msec(200);
 
 	startTask(LauncherStop);
 }
@@ -265,17 +265,19 @@ task LauncherUp()
 task LauncherUp_Short()
 {
 
+	clearTimer(T1);
 	//startTask(LauncherStop);
 	//waitUntilMotorStop(motor[Launcher1]);
 
 	//wait1Msec(100);
 
 	// 1 rubber band and short
-	int originalPower = powerToLaunch_Short;
+	int originalPower = powerToLaunch_Short + 50;
+	int originalPower_external = powerToLaunch_Short + 50;
 	//int originalPower2 = 40;
 
 	int primaryPower = AdjustPowerUsingBatteryLevel(originalPower) * -1;
-	int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower) * -1;
+	int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower_external) * -1;
 	writeDebugStreamLine("LauncherUp_Short) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
 
 	motor[Launcher1] = externalPower;
@@ -283,9 +285,18 @@ task LauncherUp_Short()
 	motor[Launcher3] = primaryPower;
 	motor[Launcher4] = primaryPower;
 
-	//waitUntil(motor[Launcher1] == externalPower && motor[Launcher2] == externalPower && motor[Launcher3] == primaryPower && motor[Launcher4] == primaryPower);
+	waitUntil(motor[Launcher1] == externalPower && motor[Launcher2] == externalPower && motor[Launcher3] == primaryPower && motor[Launcher4] == primaryPower);
 	wait1Msec(55);
 
+	writeDebugStreamLine("LauncherUp_Short) timer1:%f", time1[T1]);
+
+	int extPower = 20;
+	motor[Launcher1] = extPower;
+	motor[Launcher2] = extPower;
+	motor[Launcher3] = extPower;
+	motor[Launcher4] = extPower;
+	wait1Msec(100);
+	
 	startTask(LauncherStop);
 }
 
@@ -303,7 +314,7 @@ task LauncherUp_Mid()
 
 	int primaryPower = AdjustPowerUsingBatteryLevel(originalPower) * -1;
 	int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower) * -1;
-	writeDebugStreamLine("LauncherUp_Short) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
+	writeDebugStreamLine("LauncherUp_Mid) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
 
 	motor[Launcher1] = externalPower;
 	motor[Launcher2] = externalPower;
@@ -423,19 +434,22 @@ task LaunchBall()
 		}
 		if(time1[T3] >= 2000)
 		{
-			startTask(LauncherStop);
+			startTask(LauncherUp);
+			//startTask(LauncherStop);
 
 		}
 		else
 		{
-			wait1Msec(300);
+			//wait1Msec(300); // Skill
+			wait1Msec(500); // Drive
 			startTask(LauncherUp);
 
 			//wait1Msec(150);
 			//startTask(LauncherStop);
 
 		}
-		wait1Msec(200);
+		//wait1Msec(200); // Skill
+		wait1Msec(300); // Drive
 	}
 }
 
@@ -443,7 +457,7 @@ task usercontrol()
 {
 	// User control code here, inside the loop
 	LauncherRange = Far;
-	
+
 	while (true)
 	{
 		wait1Msec(50);
@@ -474,19 +488,19 @@ task usercontrol()
 		int btn8l = vexRT[Btn8L]; // Slow Launcher
 		int btn8r = vexRT[Btn8R]; // Slow Launcher
 
-		int power2 = vexRT[Ch2]; // forward, backward
-		int power4 = vexRT[Ch4]; // rotate
-		int power7 = 60; // shift
+		int power3 = - vexRT[Ch3]; // forward, backward
+		int power1 = vexRT[Ch1]; // rotate
+		int power7 = 80; // shift
 		int btn7r = vexRT[Btn7R]; // shift
 		int btn7l = vexRT[Btn7L]; // shift
 
 				//standard drive motor block
-		motor[FrontLeft] = power2 - power4 + btn7r * power7 - btn7l * power7;
-		motor[FrontRight] = power2 + power4 - btn7r * power7 + btn7l * power7;
-		motor[BackRight] = power2 + power4 + btn7r * power7 - btn7l * power7;
-		motor[BackLeft] = power2 - power4 - btn7r * power7 + btn7l * power7;
+		motor[FrontLeft] = power3 - power1 - btn7r * power7 + btn7l * power7;
+		motor[FrontRight] = power3 + power1 + btn7r * power7 - btn7l * power7;
+		motor[BackRight] = power3 + power1 - btn7r * power7 + btn7l * power7;
+		motor[BackLeft] = power3 - power1 + btn7r * power7 - btn7l * power7;
 
-		
+
 		if (btn8u == 1)
 		{
 			stopTask(LauncherDown);
@@ -510,7 +524,7 @@ task usercontrol()
 		else if (btn8r == 1)
 		{// Open or Close the ball dispenser
 			if (SensorValue[BallDispenserPosition] >= 1300)
-			{ 
+			{
 				// Open
 				//stopTask(CloseDispenser);
 				//startTask(OpenDispenser);
@@ -661,7 +675,7 @@ task AutoLaunchBall()
 	int originalPower = powerToDownLauncher; // power to down the launcher
 	int primaryPower = AdjustPowerUsingBatteryLevel(originalPower);
 	int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower);
-	writeDebugStreamLine("LauncherUp) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
+	writeDebugStreamLine("AutoLaunchBall) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
 
 	motor[Launcher1] = externalPower;
 	motor[Launcher2] = externalPower;
@@ -676,7 +690,7 @@ task AutoLaunchBall()
 	originalPower = powerToStay;
 	primaryPower = AdjustPowerUsingBatteryLevel(originalPower);
 	externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower);
-	writeDebugStreamLine("LauncherUp) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
+	writeDebugStreamLine("AutoLaunchBall) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
 
 	motor[Launcher1] = externalPower;
 	motor[Launcher2] = externalPower;
@@ -694,14 +708,34 @@ task AutoLaunchBall()
 
 	startTask(CloseDispenser);
 
+
+	if (SensorValue[BallLoaded] > 0)
+	{
+		writeDebugStreamLine("AutoLaunchBall) BallLoaded");
+
+		wait1Msec(300);
+	}
+
+
 	if(time1[T3] >= 3000)
 	{
-		startTask(LauncherStop);
+
+		wait1Msec(500);
+		//startTask(LauncherStop);
+		if (LauncherRange == Near)
+		{
+			startTask(LauncherUp_Short);
+		}
+		else
+		{
+			startTask(LauncherUp);
+
+		}
 
 	}
 	else
 	{
-		wait1Msec(800);
+		wait1Msec(500);
 
 		if (LauncherRange == Near)
 		{
@@ -712,7 +746,7 @@ task AutoLaunchBall()
 			startTask(LauncherUp);
 
 		}
-		//wait1Msec(150);
+		wait1Msec(200);
 		//startTask(LauncherStop);
 	}
 
@@ -723,7 +757,7 @@ task MoveBeltToReadyBall()
 	motor[Belt] = 60;
 
 	clearTimer(T4);
-	while(time1[T4] < 3000)
+	while(time1[T4] < 2500)
 	{
 	}
 
