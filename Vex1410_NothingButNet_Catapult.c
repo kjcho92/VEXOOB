@@ -60,8 +60,8 @@ enum GameMode{
 
 // For a used rubber band
 GameMode LauncherRange = Far;
-int powerToDownLauncher = 68;
-int powerToLaunch = 91;
+int powerToDownLauncher = 65;
+int powerToLaunch = 88;
 int powerToLaunch_Short = 40;
 int powerToStay = 19;
 
@@ -272,8 +272,8 @@ task LauncherUp_Short()
 	//wait1Msec(100);
 
 	// 1 rubber band and short
-	int originalPower = powerToLaunch_Short + 50;
-	int originalPower_external = powerToLaunch_Short + 50;
+	int originalPower = powerToLaunch_Short + 45;
+	int originalPower_external = powerToLaunch_Short + 45;
 	//int originalPower2 = 40;
 
 	int primaryPower = AdjustPowerUsingBatteryLevel(originalPower) * -1;
@@ -285,7 +285,7 @@ task LauncherUp_Short()
 	motor[Launcher3] = primaryPower;
 	motor[Launcher4] = primaryPower;
 
-	waitUntil(motor[Launcher1] == externalPower && motor[Launcher2] == externalPower && motor[Launcher3] == primaryPower && motor[Launcher4] == primaryPower);
+	//waitUntil(motor[Launcher1] == externalPower && motor[Launcher2] == externalPower && motor[Launcher3] == primaryPower && motor[Launcher4] == primaryPower);
 	wait1Msec(55);
 
 	writeDebugStreamLine("LauncherUp_Short) timer1:%f", time1[T1]);
@@ -565,12 +565,18 @@ task usercontrol()
 		}
 		else if (btn7d == 1)
 		{
+			stopTask(AutoLaunchBall);
+			wait1Msec(100);
+			
 			LauncherRange = Far;
 			startTask(AutoLaunchBall);
 			//startTask(DispenseBall);
 		}
 		else if (btn7u == 1)
 		{
+			stopTask(AutoLaunchBall);
+			wait1Msec(100);
+			
 			LauncherRange = Near;
 			startTask(AutoLaunchBall);
 			//startTask(DispenseBall);
@@ -583,7 +589,7 @@ task usercontrol()
 			stopTask(LaunchBall);
 			stopTask(AutoLaunchBall);
 			startTask(LauncherStop);
-			//startTask(CloseDispenser);
+			startTask(CloseDispenser);
 		}
 	}
 }
