@@ -217,7 +217,7 @@ task displayBatteryLevelOnLCD()
 	displayNextLCDString(externalBattery);
 
 	//Short delay for the LCD refresh rate
-	wait1Msec(500);
+	wait1Msec(700);
 	//}
 
 	bLCDBacklight=false;
@@ -266,7 +266,6 @@ task LauncherUp()
 task LauncherUp_Short()
 {
 
-	clearTimer(T1);
 	//startTask(LauncherStop);
 	//waitUntilMotorStop(motor[Launcher1]);
 
@@ -286,10 +285,21 @@ task LauncherUp_Short()
 	motor[Launcher3] = primaryPower;
 	motor[Launcher4] = primaryPower;
 
-	//waitUntil(motor[Launcher1] == externalPower && motor[Launcher2] == externalPower && motor[Launcher3] == primaryPower && motor[Launcher4] == primaryPower);
-	wait1Msec(55);
+	clearTimer(T1);
+	while(SensorValue[LauncherPosition] < 1250 && time1[T1] < 500)
+	{
+	}
 
-	writeDebugStreamLine("LauncherUp_Short) timer1:%f", time1[T1]);
+	if (time1[T1] > 500)
+	{
+		startTask(LauncherStop);
+		return;
+	}
+
+	//waitUntil(motor[Launcher1] == externalPower && motor[Launcher2] == externalPower && motor[Launcher3] == primaryPower && motor[Launcher4] == primaryPower);
+	//wait1Msec(55);
+
+	//writeDebugStreamLine("LauncherUp_Short) timer1:%f", time1[T1]);
 
 	int extPower = 20;
 	motor[Launcher1] = extPower;
@@ -297,7 +307,7 @@ task LauncherUp_Short()
 	motor[Launcher3] = extPower;
 	motor[Launcher4] = extPower;
 	wait1Msec(100);
-	
+
 	startTask(LauncherStop);
 }
 
@@ -389,7 +399,16 @@ task LauncherDown()
 	else
 	{
 		wait1Msec(500);
-		startTask(LauncherUp);
+
+		if (LauncherRange == Near)
+		{
+			startTask(LauncherUp_Short);
+		}
+		else
+		{
+			startTask(LauncherUp);
+
+		}
 	}
 }
 
@@ -495,7 +514,7 @@ task usercontrol()
 		int btn7r = vexRT[Btn7R]; // shift
 		int btn7l = vexRT[Btn7L]; // shift
 
-				//standard drive motor block
+		//standard drive motor block
 		motor[FrontLeft] = power3 - power1 - btn7r * power7 + btn7l * power7;
 		motor[FrontRight] = power3 + power1 + btn7r * power7 - btn7l * power7;
 		motor[BackRight] = power3 + power1 - btn7r * power7 + btn7l * power7;
@@ -508,7 +527,15 @@ task usercontrol()
 
 			wait1Msec(10);
 			//startTask(LauncherUp);
-			startTask(LauncherUp_Short);
+			if (LauncherRange == Near)
+			{
+				startTask(LauncherUp_Short);
+			}
+			else
+			{
+				startTask(LauncherUp);
+
+			}
 
 		}
 		else if (btn8d == 1)
@@ -568,7 +595,7 @@ task usercontrol()
 		{
 			stopTask(AutoLaunchBall);
 			wait1Msec(100);
-			
+
 			LauncherRange = Far;
 			startTask(AutoLaunchBall);
 			//startTask(DispenseBall);
@@ -577,7 +604,7 @@ task usercontrol()
 		{
 			stopTask(AutoLaunchBall);
 			wait1Msec(100);
-			
+
 			LauncherRange = Near;
 			startTask(AutoLaunchBall);
 			//startTask(DispenseBall);
