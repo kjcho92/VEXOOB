@@ -61,10 +61,11 @@ enum GameMode{
 // For a used rubber band
 GameMode LauncherRange = Far;
 int powerToDownLauncher = 65;
-int powerToLaunch = 88;
-int powerToLaunch_Short = 40;
+int powerToLaunch = 90;
+int powerToLaunch_Short = 42;
 int powerToStay = 19;
 
+//int postionToDown = 1280;
 int postionToDown = 1280;
 
 void StopOrReverseBelt();
@@ -108,7 +109,7 @@ task autonomous()
 
 		// move backward to aligh balls
 		motor[Belt] = -65;
-		wait1Msec(100);
+		wait1Msec(150);
 		motor[Belt] = 0;
 
 
