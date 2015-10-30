@@ -242,6 +242,27 @@ int AdjustPowerUsingExternalBatteryLevel(int originalPower)
 	return adjustedPower;
 }
 
+task LauncherUp_Skill()
+{
+	// 1 rubber band and short
+	int originalPower = powerToLaunch + 3;
+
+	int primaryPower = AdjustPowerUsingBatteryLevel(originalPower) * -1;
+	int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower) * -1;
+	writeDebugStreamLine("LauncherUp) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
+
+	motor[Launcher1] = externalPower;
+	motor[Launcher2] = externalPower;
+	motor[Launcher3] = primaryPower;
+	motor[Launcher4] = primaryPower;
+	//motor[Launcher5] = power;
+	//motor[Launcher6] = power;
+
+	wait1Msec(200);
+
+	startTask(LauncherStop);
+}
+
 task LauncherUp()
 {
 	// 1 rubber band and short
@@ -272,8 +293,8 @@ task LauncherUp_Short()
 	//wait1Msec(100);
 
 	// 1 rubber band and short
-	int originalPower = powerToLaunch_Short + 45;
-	int originalPower_external = powerToLaunch_Short + 45;
+	int originalPower = powerToLaunch_Short + 48;
+	int originalPower_external = powerToLaunch_Short + 48;
 	//int originalPower2 = 40;
 
 	int primaryPower = AdjustPowerUsingBatteryLevel(originalPower) * -1;
@@ -286,7 +307,7 @@ task LauncherUp_Short()
 	motor[Launcher4] = primaryPower;
 
 	clearTimer(T1);
-	while(SensorValue[LauncherPosition] < 1250 && time1[T1] < 500)
+	while(SensorValue[LauncherPosition] < 1230 && time1[T1] < 500)
 	{
 	}
 
@@ -314,8 +335,8 @@ task LauncherUp_Short()
 task LauncherUp_Mid()
 {
 
-	int originalPower = powerToLaunch_Short + 38;
-	int originalPower_external = powerToLaunch_Short + 38;
+	int originalPower = powerToLaunch_Short + 40;
+	int originalPower_external = powerToLaunch_Short + 40;
 	//int originalPower2 = 40;
 
 	int primaryPower = AdjustPowerUsingBatteryLevel(originalPower) * -1;
@@ -328,7 +349,7 @@ task LauncherUp_Mid()
 	motor[Launcher4] = primaryPower;
 
 	clearTimer(T1);
-	while(SensorValue[LauncherPosition] < 1420 && time1[T1] < 500)
+	while(SensorValue[LauncherPosition] < 1390 && time1[T1] < 500)
 	{
 	}
 
@@ -434,7 +455,7 @@ task LaunchBall()
 		//int launcherPosition = SensorValue[LauncherPosition];
 		//writeDebugStreamLine("LaunchBall) launcherPosition :%d", launcherPosition);
 
-		int originalPower = powerToDownLauncher; // power to down the launcher
+		int originalPower = powerToDownLauncher + 3; // power to down the launcher
 		int primaryPower = AdjustPowerUsingBatteryLevel(originalPower);
 		int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower);
 		writeDebugStreamLine("LaunchBall) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
@@ -447,7 +468,7 @@ task LaunchBall()
 		//motor[Launcher6] = power;
 
 		clearTimer(T3);
-		while(SensorValue[LauncherPosition] > postionToDown && time1[T3] < 1000)
+		while(SensorValue[LauncherPosition] > postionToDown - 10 && time1[T3] < 1000)
 		{
 		}
 
@@ -475,16 +496,16 @@ task LaunchBall()
 		}
 		else
 		{
-			//wait1Msec(300); // Skill
-			wait1Msec(500); // Drive
+			wait1Msec(300); // Skill
+			//wait1Msec(500); // Drive
 			startTask(LauncherUp);
 
 			//wait1Msec(150);
 			//startTask(LauncherStop);
 
 		}
-		//wait1Msec(200); // Skill
-		wait1Msec(300); // Drive
+		wait1Msec(210); // Skill
+		//wait1Msec(300); // Drive
 	}
 }
 
@@ -525,7 +546,7 @@ task usercontrol()
 
 		int power3 = - vexRT[Ch3]; // forward, backward
 		int power1 = vexRT[Ch1]; // rotate
-		int power7 = 80; // shift
+		int power7 = 100; // shift
 		int btn7r = vexRT[Btn7R]; // shift
 		int btn7l = vexRT[Btn7L]; // shift
 
