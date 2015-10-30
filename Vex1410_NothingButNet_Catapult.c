@@ -314,26 +314,41 @@ task LauncherUp_Short()
 task LauncherUp_Mid()
 {
 
-	//startTask(Launche6rStop);
-	//waitUntilMotorStop(motor[Launcher1]);
-
-	//wait1Msec(100);
-
-	// 1 rubber band and short
-	int originalPower = 80;
+	int originalPower = powerToLaunch_Short + 38;
+	int originalPower_external = powerToLaunch_Short + 38;
 	//int originalPower2 = 40;
 
 	int primaryPower = AdjustPowerUsingBatteryLevel(originalPower) * -1;
-	int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower) * -1;
-	writeDebugStreamLine("LauncherUp_Mid) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
+	int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower_external) * -1;
+	writeDebugStreamLine("LauncherUp_Short) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
 
 	motor[Launcher1] = externalPower;
 	motor[Launcher2] = externalPower;
 	motor[Launcher3] = primaryPower;
 	motor[Launcher4] = primaryPower;
 
+	clearTimer(T1);
+	while(SensorValue[LauncherPosition] < 1420 && time1[T1] < 500)
+	{
+	}
+
+	if (time1[T1] > 500)
+	{
+		startTask(LauncherStop);
+		return;
+	}
+
 	//waitUntil(motor[Launcher1] == externalPower && motor[Launcher2] == externalPower && motor[Launcher3] == primaryPower && motor[Launcher4] == primaryPower);
-	wait1Msec(47);
+	//wait1Msec(55);
+
+	//writeDebugStreamLine("LauncherUp_Short) timer1:%f", time1[T1]);
+
+	int extPower = 20;
+	motor[Launcher1] = extPower;
+	motor[Launcher2] = extPower;
+	motor[Launcher3] = extPower;
+	motor[Launcher4] = extPower;
+	wait1Msec(100);
 
 	startTask(LauncherStop);
 }
@@ -591,12 +606,12 @@ task usercontrol()
 
 			StopOrReverseBelt();
 		}
-		else if (btn7d == 1)
+		else if (btn5u == 1)
 		{
 			stopTask(AutoLaunchBall);
 			wait1Msec(100);
 
-			LauncherRange = Far;
+			LauncherRange = Near;
 			startTask(AutoLaunchBall);
 			//startTask(DispenseBall);
 		}
@@ -605,7 +620,16 @@ task usercontrol()
 			stopTask(AutoLaunchBall);
 			wait1Msec(100);
 
-			LauncherRange = Near;
+			LauncherRange = Middle;
+			startTask(AutoLaunchBall);
+			//startTask(DispenseBall);
+		}
+		else if (btn7d == 1)
+		{
+			stopTask(AutoLaunchBall);
+			wait1Msec(100);
+
+			LauncherRange = Far;
 			startTask(AutoLaunchBall);
 			//startTask(DispenseBall);
 		}
@@ -760,12 +784,14 @@ task AutoLaunchBall()
 		{
 			startTask(LauncherUp_Short);
 		}
+		else if (LauncherRange == Middle)
+		{
+			startTask(LauncherUp_Mid);
+		}
 		else
 		{
 			startTask(LauncherUp);
-
 		}
-
 	}
 	else
 	{
@@ -775,10 +801,13 @@ task AutoLaunchBall()
 		{
 			startTask(LauncherUp_Short);
 		}
+		else if (LauncherRange == Middle)
+		{
+			startTask(LauncherUp_Mid);
+		}
 		else
 		{
 			startTask(LauncherUp);
-
 		}
 		wait1Msec(200);
 		//startTask(LauncherStop);
