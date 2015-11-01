@@ -67,13 +67,12 @@ int powerToStay = 18;
 int powerToLaunch = 92;
 int positionToStop = 1480;
 
-int powerToLaunch_Mid = 75;
-int positionToStop_Mid = postionToDown + 50;
+int powerToLaunch_Mid = 95;
+int positionToStop_Mid = postionToDown - 100;
+//int positionToStop_Mid = postionToDown + 50;
 
-int powerToLaunch_Short = 70;
-int positionToStop_Short = postionToDown + 50;
-
-
+int powerToLaunch_Short = 80;
+int positionToStop_Short = postionToDown - 160;
 
 //int postionToDown = 1280;
 //int postionToDown = 2900;
@@ -425,7 +424,7 @@ task LauncherUp_Short()
 	motor[Launcher2] = extPower;
 	motor[Launcher3] = extPower;
 	motor[Launcher4] = extPower;
-	wait1Msec(50);
+	wait1Msec(100);
 
 	startTask(LauncherStop);
 }
@@ -617,18 +616,20 @@ task LauncherDown()
 	{
 		wait1Msec(300);
 
-		if (LauncherRange == Near)
-		{
-			startTask(LauncherUp_Short);
-		}
-		else if (LauncherRange == Middle)
-		{
-			startTask(LauncherUp_Mid);
-		}
-		else
-		{
-			startTask(LauncherUp);
-		}
+		startTask(LauncherUp_Short);
+		
+		//if (LauncherRange == Near)
+		//{
+		//	startTask(LauncherUp_Short);
+		//}
+		//else if (LauncherRange == Middle)
+		//{
+		//	startTask(LauncherUp_Mid);
+		//}
+		//else
+		//{
+		//	startTask(LauncherUp);
+		//}
 	}
 }
 
