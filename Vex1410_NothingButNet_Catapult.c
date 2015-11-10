@@ -58,6 +58,7 @@ enum GameMode{
 	Far = 0,
 	Middle = 1,
 	Near = 2,
+	Farthest = 3,
 };
 
 
@@ -69,6 +70,9 @@ int powerToStay = 18;
 
 int powerToLaunch = 92;
 int positionToStop = 1480;
+
+int powerToLaunch_Farthest = 99;
+int positionToStop_Farthest = 1480;
 
 int powerToLaunch_Mid = 95;
 int positionToStop_Mid = postionToDown - 100;
@@ -314,6 +318,43 @@ task LauncherUp()
 
 	clearTimer(T1);
 	while(SensorValue[LauncherPosition] < positionToStop && time1[T1] < 500)
+	{
+	}
+
+	if (time1[T1] > 500)
+	{
+		startTask(LauncherStop);
+		return;
+	}
+
+	startTask(LauncherStop);
+	//int power1 = 0;
+	//motor[Launcher1] = power1;
+	//motor[Launcher2] = power1;
+	//motor[Launcher3] = power1;
+	//motor[Launcher4] = power1;
+}
+
+task LauncherUp_Farthest()
+{
+	startTask(LauncherStop);
+
+	//int positionToStop = 1480;
+
+	int originalPower = powerToLaunch_Farthest;
+	int originalPower_external = powerToLaunch_Farthest;
+
+	int primaryPower = AdjustPowerUsingBatteryLevel(originalPower) * -1;
+	int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower_external) * -1;
+	writeDebugStreamLine("LauncherUp_Short) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
+
+	motor[Launcher1] = externalPower;
+	motor[Launcher2] = externalPower;
+	motor[Launcher3] = primaryPower;
+	motor[Launcher4] = primaryPower;
+
+	clearTimer(T1);
+	while(SensorValue[LauncherPosition] < positionToStop_Farthest && time1[T1] < 500)
 	{
 	}
 
@@ -687,6 +728,10 @@ task LauncherDown()
 		{
 			startTask(LauncherUp_Mid);
 		}
+		else if (LauncherRange == Farthest)
+		{
+			startTask(LauncherUp_Farthest);
+		}
 		else
 		{
 			startTask(LauncherUp);
@@ -747,7 +792,14 @@ task LaunchBall()
 		{
 			wait1Msec(330); // Skill
 			//wait1Msec(500); // Drive
-			startTask(LauncherUp);
+			if (LauncherRange == Farthest)
+			{
+				startTask(LauncherUp_Farthest);
+			}
+			else
+			{
+				startTask(LauncherUp);
+			}
 			//startTask(LauncherUp_Skill);
 
 			//wait1Msec(150);
@@ -928,11 +980,14 @@ task usercontrol()
 			{
 				startTask(LauncherUp_Mid);
 			}
+			else if (LauncherRange == Farthest)
+			{
+				startTask(LauncherUp_Farthest);
+			}
 			else
 			{
 				startTask(LauncherUp);
 			}
-
 		}
 		else if (btn8d == 1)
 		{
@@ -940,8 +995,16 @@ task usercontrol()
 			//nMotorEncoder(FrontRight) = 0;
 			//ForBack(80, 1000);
 
-			stopTask(LauncherUp);
-			startTask(LauncherDown);
+			stopTask(AutoLaunchBall);
+			wait1Msec(100);
+
+			LauncherRange = Farthest;
+			startTask(AutoLaunchBall);
+
+			//LauncherRange = Farthest;
+
+			//stopTask(LauncherUp);
+			//startTask(LauncherDown);
 
 		}
 		else if (btn8l == 1)
@@ -1113,7 +1176,10 @@ task CloseDispenser()
 }
 
 task AutoLaunchBall()
-{ // T2
+{
+	// T2
+	startTask(CloseDispenser);
+
 	motor[Belt] = -100;
 	wait1Msec(200);
 	motor[Belt] = 0;
@@ -1151,26 +1217,36 @@ task AutoLaunchBall()
 	startTask(MoveBeltToReadyBall);
 
 	clearTimer(T3);
+	bool ballReleased = false;
+	bool ballLoaded = false;
+
 	while(SensorValue[BallReleased] == 0 && SensorValue[BallLoaded] == 0 && time1[T3] < 3000)
 	{
 	}
 
-	startTask(CloseDispenser);
+
+	if (SensorValue[BallReleased] > 0)
+	{
+
+		wait1Msec(150);
+
+		ballReleased = true;
+	}
 
 
-	//if (SensorValue[BallReleased] > 0)
+	//if (SensorValue[BallLoaded] > 0)
 	//{
-	//	writeDebugStreamLine("AutoLaunchBall) BallLoaded");
-
-	//	wait1Msec(300);
+	//	BallLoaded = true;
 	//}
+
+	startTask(CloseDispenser);
 
 
 	if(time1[T3] >= 3000)
 	{
 		startTask(LauncherStop);
 	}
-	else if (SensorValue[BallReleased] > 0)
+	else if (ballReleased == true)
 	{
 		while(SensorValue[BallLoaded] == 0 && time1[T3] < 3000)
 		{
@@ -1189,6 +1265,10 @@ task AutoLaunchBall()
 		else if (LauncherRange == Middle)
 		{
 			startTask(LauncherUp_Mid);
+		}
+		else if (LauncherRange == Farthest)
+		{
+			startTask(LauncherUp_Farthest);
 		}
 		else
 		{
