@@ -46,6 +46,7 @@ task DispenseBall();
 task OpenDispenser();
 task CloseDispenser();
 task MoveBeltToReadyBall();
+task MoveBeltToReadyFirstBall();
 task AutoLaunchBall();
 task displayBatteryLevelOnLCD();
 
@@ -66,20 +67,21 @@ enum GameMode{
 
 // For a used rubber band
 GameMode LauncherRange = Far;
-int powerToDown = 71;
-int postionToDown = 1380;
-int powerToStay = 18;
+int powerToDown = 72;
+int postionToDown = 1370;
+int powerToStay = 19;
 
-int powerToLaunch = 90;
+int powerToLaunch = 91;
 int positionToStop = 1480;
 
 int powerToLaunch_Farthest = 99;
 int positionToStop_Farthest = 1480;
 
-int powerToLaunch_Mid = 95;
+int powerToLaunch_Mid = 96;
 int positionToStop_Mid = postionToDown - 100;
 //int positionToStop_Mid = postionToDown + 50;
 
+long lastLaunchTime = 0;
 //int powerToLaunch_Short = 73;
 //int positionToStop_Short = 155;
 
@@ -131,10 +133,11 @@ task autonomous()
 		writeDebugStreamLine("(autonomous started) Time: %d, %d", nPgmTime, nSysTime);
 
 		int i = 0;
+		int j = 0;
 		while(true)
 		{
 			// Repeat for 4 times (4 preloads)
-			if (i > 3)
+			if (i > 3 || j > 5)
 			{
 				break;
 			}
@@ -148,8 +151,14 @@ task autonomous()
 			//int launcherPosition = SensorValue[LauncherPosition];
 			//writeDebugStreamLine("LaunchBall) launcherPosition :%d", launcherPosition);
 
-			// DOwn the launcher
+			// Down the launcher
 			int originalPower = powerToDown; // power to down the launcher
+
+			if (i == 0)
+			{
+				originalPower += 2;
+			}
+
 			int primaryPower = AdjustPowerUsingBatteryLevel(originalPower);
 			int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower);
 			writeDebugStreamLine("LauncherUp) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
@@ -184,8 +193,14 @@ task autonomous()
 			startTask(OpenDispenser);
 
 			// Move the fall forward to make a ball ready
-			startTask(MoveBeltToReadyBall);
-
+			if (i == 0)
+			{
+				startTask(MoveBeltToReadyFirstBall);
+			}
+			else
+			{
+				startTask(MoveBeltToReadyBall);
+			}
 			// Wait until a ball loaded
 			clearTimer(T3);
 			while(SensorValue[BallLoaded] == 0 && time1[T3] < 2000)
@@ -194,6 +209,8 @@ task autonomous()
 
 			// Close the dispenser
 			startTask(CloseDispenser);
+
+			j++;
 
 			//if (i == 0)
 			//{
@@ -844,19 +861,19 @@ void TravelToTheOtherSide()
 
 	// Move forward
 	nMotorEncoder(FrontRight) = 0;
-	ForBack(-80, 880);
+	ForBack(-80, 920);
 
 	wait1Msec(200);
 
 	// Turn left to the other side
 	nMotorEncoder(FrontRight) = 0;
-	EncoderRotate(50, 390);
+	EncoderRotate(50, 420);
 
 	wait1Msec(100);
 
 	// Move backward
 	nMotorEncoder(FrontRight) = 0;
-	ForBack(80, 650);
+	ForBack(80, 640);
 
 	wait1Msec(100);
 
@@ -1151,6 +1168,12 @@ task AutoLaunchBall()
 	//writeDebugStreamLine("LaunchBall) launcherPosition :%d", launcherPosition);
 
 	int originalPower = powerToDown; // power to down the launcher
+
+	if ((nPgmTime - lastLaunchTime) > 5000)
+	{
+		originalPower += 2;
+	}
+
 	int primaryPower = AdjustPowerUsingBatteryLevel(originalPower);
 	int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower);
 	writeDebugStreamLine("AutoLaunchBall) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
@@ -1177,7 +1200,14 @@ task AutoLaunchBall()
 
 	startTask(OpenDispenser);
 
-	startTask(MoveBeltToReadyBall);
+	if ((nPgmTime - lastLaunchTime) > 5000)
+	{
+		startTask(MoveBeltToReadyFirstBall);
+	}
+	else
+	{
+		startTask(MoveBeltToReadyBall);
+	}
 
 	clearTimer(T3);
 	bool ballReleased = false;
@@ -1203,6 +1233,7 @@ task AutoLaunchBall()
 
 	startTask(CloseDispenser);
 
+	 lastLaunchTime = nPgmTime;
 
 	if(time1[T3] >= 3000)
 	{
@@ -1249,6 +1280,25 @@ task AutoLaunchBall()
 
 task MoveBeltToReadyBall()
 {// T4
+	motor[Belt] = 60;
+
+	clearTimer(T4);
+	while(time1[T4] < 2000)
+	{
+	}
+
+	motor[Belt] = 0;
+
+}
+
+task MoveBeltToReadyFirstBall()
+{// T4
+
+	// move backward to aligh balls
+	motor[Belt] = -70;
+	wait1Msec(150);
+	motor[Belt] = 0;
+
 	motor[Belt] = 60;
 
 	clearTimer(T4);
