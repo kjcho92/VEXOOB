@@ -78,13 +78,13 @@ int positionToStop = 1480;
 int powerToLaunch_Farthest = 103;
 int positionToStop_Farthest = 1480;
 
-int powerToLaunch_Mid = 100;
-int positionToStop_Mid = postionToDown - 100;
+int powerToLaunch_Mid = 110;
+int positionToStop_Mid = 1260;
 //int positionToStop_Mid = postionToDown + 50;
 
 long lastLaunchTime = 0;
-//int powerToLaunch_Short = 73;
-//int positionToStop_Short = 155;
+int powerToLaunch_Short = 97;
+int positionToStop_Short = 1200;
 
 //int postionToDown = 1280;
 //int postionToDown = 2900;
@@ -393,7 +393,9 @@ task LauncherUp_Mid()
 	int originalPower = powerToLaunch_Mid;
 	int originalPower_external = powerToLaunch_Mid;
 
-	int local_positionToStop = SensorValue[LauncherPosition] + 95;
+	//int local_positionToStop = SensorValue[LauncherPosition] + 90;
+	
+	int local_positionToStop = positionToStop_Mid - 50;
 	//int originalPower2 = 40;
 
 	int primaryPower = AdjustPowerUsingBatteryLevel(originalPower) * -1;
@@ -445,8 +447,11 @@ task LauncherUp_Short()
 
 	//int positionToStop = 1480;
 
-	int originalPower = powerToLaunch - 75;
-	int originalPower_external = powerToLaunch;
+
+	int originalPower = powerToLaunch_Short - 55;
+	int originalPower_external = powerToLaunch_Short;
+
+	int local_positionToStop = positionToStop_Short;
 
 	//int originalPower = powerToLaunch - 65;
 	//int originalPower_external = powerToLaunch - 20;
@@ -463,7 +468,7 @@ task LauncherUp_Short()
 	motor[Launcher4] = primaryPower;
 
 	clearTimer(T1);
-	while(SensorValue[LauncherPosition] < positionToStop + 200 && time1[T1] < 500)
+	while(SensorValue[LauncherPosition] < local_positionToStop && time1[T1] < 500)
 	{
 	}
 
