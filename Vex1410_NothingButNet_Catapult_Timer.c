@@ -380,7 +380,7 @@ task LauncherUp_Farthest()
 }
 
 task LauncherUp_Mid()
-{	
+{
 	//wait1Msec(100);
 
 	//startTask(LauncherStop);
@@ -399,7 +399,7 @@ task LauncherUp_Mid()
 	//int local_positionToStop = SensorValue[LauncherPosition] + 90;
 
 	//int local_positionToStop = positionToStop_Mid;
-	int local_positionToStop = SensorValue[LauncherPosition] + 125;
+	int local_positionToStop = SensorValue[LauncherPosition] + 130;
 
 	//int originalPower2 = 40;
 
@@ -412,7 +412,7 @@ task LauncherUp_Mid()
 	motor[Launcher3] = primaryPower;
 	motor[Launcher4] = primaryPower;
 
-	
+
 	writeDebugStreamLine("1>>>>> LauncherUp_Mid) LauncherPosition:%d", SensorValue[LauncherPosition]);
 
 	//wait1Msec(80);
@@ -421,8 +421,8 @@ task LauncherUp_Mid()
 	//while(time1[T1] < 70)
 	{
 	}
-	
-	
+
+
 	writeDebugStreamLine("2>>>>> LauncherUp_Mid) LauncherPosition:%d", SensorValue[LauncherPosition]);
 
 
@@ -1326,7 +1326,13 @@ task AutoLaunchBall()
 
 task MoveBeltToReadyBall()
 {// T4
-	motor[Belt] = 60;
+	//motor[Belt] = 60;
+
+	int beltPower = 80;
+	beltPower = AdjustPowerUsingBatteryLevel(beltPower);
+
+	motor[Belt] = beltPower;
+	//motor[Belt
 
 	clearTimer(T4);
 	while(time1[T4] < 2000)
