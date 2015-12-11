@@ -477,7 +477,7 @@ task LauncherUp_Short()
 	int originalPower_external = powerToLaunch_Short;
 
 	//int local_positionToStop = positionToStop_Short;
-	int local_positionToStop = SensorValue[LauncherPosition]+ 25;
+	int local_positionToStop = SensorValue[LauncherPosition] + 25;
 
 	//int originalPower = powerToLaunch - 65;
 	//int originalPower_external = powerToLaunch - 20;
@@ -496,7 +496,7 @@ task LauncherUp_Short()
 
 	//wait1Msec(35);
 	//clearTimer(T1);
-	unsigned long time = nPgmTime + 80;
+	unsigned long time = nPgmTime + 85;
 	while(nPgmTime < time)
 	//while(SensorValue[LauncherPosition] < local_positionToStop && time1[T1] < 500)
 	//for(int i=0;i<3500;i++)
@@ -519,7 +519,7 @@ task LauncherUp_Short()
 	//motor[Launcher2] = extPower;
 	//motor[Launcher3] = extPower;
 	//motor[Launcher4] = extPower;
-	//wait1Msec(100);
+	//wait1Msec(70);
 
 	startTask(LauncherStop);
 }
@@ -1258,11 +1258,11 @@ task AutoLaunchBall()
 
 	startTask(OpenDispenser);
 
-	//if ((nPgmTime - lastLaunchTime) > 5000)
-	//{
-	//	startTask(MoveBeltToReadyFirstBall);
-	//}
-	//else
+	if ((nPgmTime - lastLaunchTime) > 5000)
+	{
+		startTask(MoveBeltToReadyFirstBall);
+	}
+	else
 	{
 		startTask(MoveBeltToReadyBall);
 	}
@@ -1347,14 +1347,14 @@ task MoveBeltToReadyBall()
 {// T4
 	//motor[Belt] = 60;
 
-	int beltPower = 80;
+	int beltPower = 110;
 	beltPower = AdjustPowerUsingBatteryLevel(beltPower);
 
 	motor[Belt] = beltPower;
 	//motor[Belt
 
 	clearTimer(T4);
-	while(time1[T4] < 2000)
+	while(time1[T4] < 1300)
 	{
 	}
 
@@ -1366,14 +1366,23 @@ task MoveBeltToReadyFirstBall()
 {// T4
 
 	// move backward to aligh balls
-	motor[Belt] = -70;
-	wait1Msec(150);
+
+
+	// move backward to aligh balls
+	int beltPower = 110;
+	beltPower = AdjustPowerUsingBatteryLevel(beltPower);
+	motor[Belt] = -beltPower;
+
+	wait1Msec(200);
 	motor[Belt] = 0;
+	
+	beltPower = 110;
+	beltPower = AdjustPowerUsingBatteryLevel(beltPower);
 
-	motor[Belt] = 60;
-
+	motor[Belt] = beltPower;
+	
 	clearTimer(T4);
-	while(time1[T4] < 2000)
+	while(time1[T4] < 1300)
 	{
 	}
 
