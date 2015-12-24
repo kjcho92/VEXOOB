@@ -142,7 +142,44 @@ task LauncherDown()
 	LauncherDown_Helper();
 }
 
+
 void LauncherDown_Helper()
+{
+		int launcherPower = 80;
+	int originalPower = launcherPower;
+	int primaryPower = originalPower;
+
+		motor[Launcher1_H] = primaryPower;
+		motor[Launcher1_L] = primaryPower;
+
+		waitUntil(SensorValue[Launcher1_Ready] == 1);
+
+	int powerLoader = -90;
+	motor[Loader1] = powerLoader;
+
+	nMotorEncoder(Loader1) = 0;
+	waitUntil(abs(nMotorEncoder(Loader1)) >= 310);
+
+	//writeDebugStreamLine("LauncherDown_Helper) #3 Launcher1_Loaded :%d", SensorValue[Launcher1_Loaded]);
+
+	motor[Loader1] = 0;
+
+	powerLoader = 80;
+	motor[Loader1] = powerLoader;
+
+	nMotorEncoder(Loader1) = 0;
+	waitUntil(abs(nMotorEncoder(Loader1)) >= 70);
+	motor[Loader1] = 0;
+
+	waitUntil(SensorValue[Launcher1_Ready] == 1);
+	startTask(LauncherStop);
+
+	//waitUntil(SensorValue[Launcher1_Loaded] == 0);
+	//writeDebugStreamLine("LauncherDown_Helper) #4 Launcher1_Loaded :%d", SensorValue[Launcher1_Loaded]);
+
+}
+
+void LauncherDown_Helper_01()
 {//
 
 	int launcherPower = 110;
