@@ -28,9 +28,9 @@
 
 void pre_auton()
 {
-  // Set bStopTasksBetweenModes to false if you want to keep user created tasks running between
-  // Autonomous and Tele-Op modes. You will need to manage all user created tasks if set to false.
-  bStopTasksBetweenModes = true;
+	// Set bStopTasksBetweenModes to false if you want to keep user created tasks running between
+	// Autonomous and Tele-Op modes. You will need to manage all user created tasks if set to false.
+	bStopTasksBetweenModes = true;
 
 	// All activities that occur before the competition starts
 	// Example: clearing encoders, setting servo positions, ...
@@ -47,9 +47,9 @@ void pre_auton()
 
 task autonomous()
 {
-  // .....................................................................................
-  // Insert user code here.
-  // .....................................................................................
+	// .....................................................................................
+	// Insert user code here.
+	// .....................................................................................
 
 	AutonomousCodePlaceholderForTesting();  // Remove this function call once you have "real" code.
 }
@@ -101,7 +101,7 @@ task usercontrol()
 
 		//motor[Loader1] = -btn8d * powerLoader;
 		motor[Launcher1_Wall] = -btn7u * powerWall + btn7d * powerWall;
-		
+
 		if (btn8d == 1)
 		{
 			//stopTask(LauncherUp);
@@ -124,7 +124,7 @@ task LaunchBall()
 {//
 	long prevTime = nPgmTime;
 	long startTime = nPgmTime;
-	for(int i=0;i<=10;i++)
+	for(int i=0;i<=3;i++)
 	{
 		LauncherDown_Helper();
 		writeDebugStreamLine("LaunchBall) %d Time: %d", i, nPgmTime - prevTime);
@@ -132,6 +132,8 @@ task LaunchBall()
 	}
 
 	writeDebugStreamLine("LaunchBall) Time: %d", nPgmTime - startTime);
+	startTask(LauncherStop);
+
 }
 
 
@@ -143,32 +145,34 @@ task LauncherDown()
 void LauncherDown_Helper()
 {//
 
-	int launcherPower = 100;
+	int launcherPower = 110;
 	int originalPower = launcherPower;
 	int primaryPower = originalPower;
 
-	motor[Launcher1_H] = primaryPower;
-	motor[Launcher1_L] = primaryPower;
+	if (SensorValue[Launcher1_Ready] != 1)
+	{
+		motor[Launcher1_H] = primaryPower;
+		motor[Launcher1_L] = primaryPower;
 
-	//writeDebugStreamLine("LauncherDown_Helper) #1 launcherPosition :%d", abs(nMotorEncoder(Launcher1_L)));
+		//writeDebugStreamLine("LauncherDown_Helper) #1 launcherPosition :%d", abs(nMotorEncoder(Launcher1_L)));
 
-	waitUntil(SensorValue[Launcher1_Ready] == 1);
+		waitUntil(SensorValue[Launcher1_Ready] == 1);
 
-	//writeDebugStreamLine("LauncherDown_Helper) #2 launcherPosition :%d", abs(nMotorEncoder(Launcher1_L)));
+		//writeDebugStreamLine("LauncherDown_Helper) #2 launcherPosition :%d", abs(nMotorEncoder(Launcher1_L)));
 
 
-	originalPower = 45;
-	primaryPower = originalPower;
+		originalPower = 15;
+		primaryPower = originalPower;
 
-	motor[Launcher1_H] = primaryPower;
-	motor[Launcher1_L] = primaryPower;
-
+		motor[Launcher1_H] = primaryPower;
+		motor[Launcher1_L] = primaryPower;
+	}
 
 	int powerLoader = -90;
 	motor[Loader1] = powerLoader;
 
 	//waitUntil(SensorValue[Launcher1_Loaded] == 1)
-	
+
 	nMotorEncoder(Loader1) = 0;
 	waitUntil(abs(nMotorEncoder(Loader1)) >= 310);
 
@@ -189,11 +193,22 @@ void LauncherDown_Helper()
 	motor[Launcher1_H] = primaryPower;
 	motor[Launcher1_L] = primaryPower;
 
-	waitUntil(SensorValue[Launcher1_Loaded] == 0);
+	unsigned long cTime = nPgmTime;
+	waitUntil(cTime + 300 <= nPgmTime);
+	
+	waitUntil(SensorValue[Launcher1_Ready] == 1);
 
+	originalPower = 15;
+	primaryPower = originalPower;
+
+	motor[Launcher1_H] = primaryPower;
+	motor[Launcher1_L] = primaryPower;
+
+	//waitUntil(SensorValue[Launcher1_Loaded] == 0);
 	//writeDebugStreamLine("LauncherDown_Helper) #4 Launcher1_Loaded :%d", SensorValue[Launcher1_Loaded]);
+	//startTask(LauncherStop);
 
-  startTask(LauncherStop);
+
 }
 
 
@@ -296,9 +311,9 @@ void LauncherDown_Helper_Old()
 
 	//motor[Loader1] = 0;
 
-  startTask(LauncherStop);
+	startTask(LauncherStop);
 
-  	wait1Msec(10);
+	wait1Msec(10);
 	originalPower = -30;
 	primaryPower = originalPower;
 
@@ -315,7 +330,7 @@ void LauncherDown_Helper_Old()
 
 task LauncherUp()
 {// T3
-  //stopTask(LauncherStop);
+	//stopTask(LauncherStop);
 
 	int originalPower = -110;
 	int primaryPower = originalPower;
@@ -333,7 +348,7 @@ task LauncherUp()
 	//motor[Launcher3] = primaryPower;
 
 
-  startTask(LauncherStop);
+	startTask(LauncherStop);
 }
 
 task LauncherStop()
