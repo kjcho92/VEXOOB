@@ -141,20 +141,133 @@ task LauncherDown()
 {//
 	LauncherDown_Helper();
 }
-
-
-void LauncherDown_Helper()
+void LauncherDown_Helper_04()
 {
-		int launcherPower = 80;
+	int launcherPower = 90;
 	int originalPower = launcherPower;
 	int primaryPower = originalPower;
 
-		motor[Launcher1_H] = primaryPower;
-		motor[Launcher1_L] = primaryPower;
 
+	motor[Launcher1_H] = primaryPower;
+	motor[Launcher1_L] = primaryPower;
+
+	waitUntil(SensorValue[Launcher1_Ready] == 1);
+
+
+	int powerLoader = 30;
+	motor[Loader1] = powerLoader;
+	nMotorEncoder(Loader1) = 0;
+	waitUntil(abs(nMotorEncoder(Loader1)) >= 210);
+	motor[Loader1] = 0;
+
+
+	//writeDebugStreamLine("LauncherDown_Helper) #3 Launcher1_Loaded :%d", SensorValue[Launcher1_Loaded]);
+
+
+	//powerLoader = 120;
+	//motor[Loader1] = powerLoader;
+
+	//nMotorEncoder(Loader1) = 0;
+	//waitUntil(abs(nMotorEncoder(Loader1)) >= 50);
+	//motor[Loader1] = 0;
+
+
+
+	//writeDebugStreamLine("LauncherDown_Helper) #2 Launcher1_Loaded :%d", SensorValue[Launcher1_Loaded]);
+
+
+
+	//writeDebugStreamLine("LauncherDown_Helper) #3 Launcher1_Loaded :%d", SensorValue[Launcher1_Loaded]);
+
+
+	unsigned long cTime = nPgmTime + 300;
+	waitUntil(cTime <= nPgmTime);
+
+	if (SensorValue[Launcher1_Loaded] == 1)
+	{
 		waitUntil(SensorValue[Launcher1_Ready] == 1);
 
-	int powerLoader = -90;
+		//powerLoader = -120;
+		//motor[Loader1] = powerLoader;
+
+		//writeDebugStreamLine("LauncherDown_Helper) #4 Launcher1_Loaded :%d", SensorValue[Launcher1_Loaded]);
+	}
+	startTask(LauncherStop);
+
+}
+
+void LauncherDown_Helper()
+{
+	int launcherPower = 85;
+	int originalPower = launcherPower;
+	int primaryPower = originalPower;
+
+
+	int powerLoader = -125;
+	motor[Loader1] = powerLoader;
+
+	nMotorEncoder(Loader1) = 0;
+
+
+	motor[Launcher1_H] = primaryPower;
+	motor[Launcher1_L] = primaryPower;
+
+	waitUntil(abs(nMotorEncoder(Loader1)) >= 305);
+
+	//writeDebugStreamLine("LauncherDown_Helper) #3 Launcher1_Loaded :%d", SensorValue[Launcher1_Loaded]);
+
+	motor[Loader1] = 0;
+
+	powerLoader = 120;
+	motor[Loader1] = powerLoader;
+
+	nMotorEncoder(Loader1) = 0;
+	waitUntil(abs(nMotorEncoder(Loader1)) >= 45);
+	motor[Loader1] = 0;
+
+
+
+	//writeDebugStreamLine("LauncherDown_Helper) #2 Launcher1_Loaded :%d", SensorValue[Launcher1_Loaded]);
+
+
+
+	//writeDebugStreamLine("LauncherDown_Helper) #3 Launcher1_Loaded :%d", SensorValue[Launcher1_Loaded]);
+
+
+	unsigned long cTime = nPgmTime + 200;
+	waitUntil(cTime <= nPgmTime);
+
+	if (true)
+	{
+		waitUntil(SensorValue[Launcher1_Ready] == 1);
+	}
+	else
+	{
+		if (SensorValue[Launcher1_Loaded] == 1)
+		{
+			waitUntil(SensorValue[Launcher1_Ready] == 1);
+			//powerLoader = -120;
+			//motor[Loader1] = powerLoader;
+
+			//writeDebugStreamLine("LauncherDown_Helper) #4 Launcher1_Loaded :%d", SensorValue[Launcher1_Loaded]);
+		}
+	}
+	startTask(LauncherStop);
+
+}
+
+void LauncherDown_Helper_02()
+{
+	int launcherPower = 83;
+	int originalPower = launcherPower;
+	int primaryPower = originalPower;
+
+	motor[Launcher1_H] = primaryPower;
+	motor[Launcher1_L] = primaryPower;
+
+	waitUntil(SensorValue[Launcher1_Ready] == 1);
+
+	int powerLoader = -120;
 	motor[Loader1] = powerLoader;
 
 	nMotorEncoder(Loader1) = 0;
@@ -164,14 +277,17 @@ void LauncherDown_Helper()
 
 	motor[Loader1] = 0;
 
-	powerLoader = 80;
+	powerLoader = 110;
 	motor[Loader1] = powerLoader;
 
 	nMotorEncoder(Loader1) = 0;
-	waitUntil(abs(nMotorEncoder(Loader1)) >= 70);
+	waitUntil(abs(nMotorEncoder(Loader1)) >= 50);
 	motor[Loader1] = 0;
 
-	waitUntil(SensorValue[Launcher1_Ready] == 1);
+	if (SensorValue[Launcher1_Loaded] == 1)
+	{
+		waitUntil(SensorValue[Launcher1_Ready] == 1);
+	}
 	startTask(LauncherStop);
 
 	//waitUntil(SensorValue[Launcher1_Loaded] == 0);
@@ -230,9 +346,9 @@ void LauncherDown_Helper_01()
 	motor[Launcher1_H] = primaryPower;
 	motor[Launcher1_L] = primaryPower;
 
-	unsigned long cTime = nPgmTime;
-	waitUntil(cTime + 300 <= nPgmTime);
-	
+	unsigned long cTime = nPgmTime + 300;
+	waitUntil(cTime <= nPgmTime);
+
 	waitUntil(SensorValue[Launcher1_Ready] == 1);
 
 	originalPower = 15;
