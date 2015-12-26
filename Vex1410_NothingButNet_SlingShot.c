@@ -1,6 +1,8 @@
 #pragma config(I2C_Usage, I2C1, i2cSensors)
-#pragma config(Sensor, dgtl1,  Launcher1_Loaded, sensorTouch)
-#pragma config(Sensor, dgtl2,  Launcher1_Ready, sensorTouch)
+#pragma config(Sensor, dgtl1,  Launcher1_BallReleased, sensorTouch)
+#pragma config(Sensor, dgtl2,  Launcher1_BallLoaded, sensorTouch)
+#pragma config(Sensor, dgtl3,  Launcher1_Started, sensorTouch)
+#pragma config(Sensor, dgtl4,  Launcher1_Ready, sensorTouch)
 #pragma config(Sensor, I2C_1,  Loader1_I2C,    sensorQuadEncoderOnI2CPort,    , AutoAssign )
 #pragma config(Motor,  port1,           Loader1,       tmotorVex393_HBridge, openLoop, encoderPort, I2C_1)
 #pragma config(Motor,  port2,           Launcher1_H,   tmotorVex393_MC29, openLoop)
@@ -70,7 +72,7 @@ task LauncherDown();
 task RotateLoader();
 
 
-void LauncherDown_Helper();
+void LauncherDown_Helper(int count);
 void LauncherStop_Helper();
 
 bool Launcher_Loaded;
@@ -123,13 +125,24 @@ task usercontrol()
 }
 
 
+
 task LaunchBall()
+{//
+	long startTime = nPgmTime;
+
+	LauncherDown_Helper(4);
+
+	writeDebugStreamLine("LaunchBall) Elapsed Time: %d", nPgmTime - startTime);
+	startTask(LauncherStop);
+}
+
+task LaunchBall_01()
 {//
 	long prevTime = nPgmTime;
 	long startTime = nPgmTime;
 	for(int i=0;i<=3;i++)
 	{
-		LauncherDown_Helper();
+		LauncherDown_Helper(1);
 		writeDebugStreamLine("LaunchBall) %d Time: %d", i, nPgmTime - prevTime);
 		prevTime = nPgmTime;
 	}
@@ -142,37 +155,128 @@ task LaunchBall()
 
 task LauncherDown()
 {//
-	LauncherDown_Helper();
+	LauncherDown_Helper(1);
 }
 
 task RotateLoader()
 {//
+		//waitUntil(SensorValue[Launcher1_Started] == 1);
 
-	int powerLoader = -40;
-	motor[Loader1] = powerLoader;
+		int powerLoader = -25;
+		motor[Loader1] = powerLoader;
 
-	//nMotorEncoder(Loader1) = 0;
+		//nMotorEncoder(Loader1) = 0;
 
-	Launcher_Loaded = false;
-	//waitUntil(SensorValue[Launcher1_Loaded] == 1);
+		//Launcher_Loaded = false;
+		//waitUntil(SensorValue[Launcher1_Loaded] == 1);
 
-	unsigned long cTime = nPgmTime + 500;
+		unsigned long cTime = nPgmTime + 1000;
 
-	int loaded = SensorValue[Launcher1_Loaded];
-	while(loaded == 0 && cTime >= nPgmTime)
-	{
-		loaded = SensorValue[Launcher1_Loaded];
-	}
+		
+		int released = SensorValue[Launcher1_BallReleased];
+		while(released == 0 && cTime >= nPgmTime)
+		{
+			released = SensorValue[Launcher1_BallReleased];
+		}
+		
+		
+		writeDebugStreamLine("RotateLoader) #00 Launcher1_BallReleased :%d", released);
 
-	motor[Loader1] = 0;
+		//powerLoader = 80;
+		//motor[Loader1] = powerLoader;
+
+		//wait1Msec(80);
+		
+		motor[Loader1] = 0;
 	
-	if (loaded == 1)
-	{
-		Launcher_Loaded = true;
-	}
 }
 
-void LauncherDown_Helper()
+void LauncherDown_Helper(int count)
+{
+	int index = 1;
+	int launcherPower = 85;
+	int originalPower = launcherPower;
+
+	do
+	{
+		int primaryPower = launcherPower;
+
+		motor[Launcher1_H] = primaryPower;
+		motor[Launcher1_L] = primaryPower;
+
+		
+		waitUntil(SensorValue[Launcher1_Started] == 1);
+
+		writeDebugStreamLine("LauncherDown_Helper) #1 Launcher1_Loaded :%d", SensorValue[Launcher1_Started]);
+
+		startTask(RotateLoader);
+
+		//waitUntil(SensorValue[Launcher1_BallReleased] == 1);
+
+		
+		writeDebugStreamLine("LauncherDown_Helper) #1-1 Launcher1_Ready :%d", SensorValue[Launcher1_Ready]);
+		
+		//wait1Msec(100);
+		
+		waitUntil(SensorValue[Launcher1_Ready] == 1);
+
+		writeDebugStreamLine("LauncherDown_Helper) #2 Launcher1_Ready :%d", SensorValue[Launcher1_Ready]);
+		
+		unsigned long cTime = nPgmTime + 1000;
+
+		int loaded = SensorValue[Launcher1_BallLoaded];
+		while(loaded == 0 && cTime >= nPgmTime)
+		{
+			loaded = SensorValue[Launcher1_BallLoaded];
+			
+			originalPower = 15;
+			primaryPower = originalPower;
+	
+			motor[Launcher1_H] = primaryPower;
+			motor[Launcher1_L] = primaryPower;
+
+		}
+		
+		writeDebugStreamLine("LauncherDown_Helper) #3 loaded:%d", loaded);
+
+
+		if (loaded == 1)
+		{
+			
+	    originalPower = launcherPower;
+			primaryPower = originalPower;
+	
+			motor[Launcher1_H] = primaryPower;
+			motor[Launcher1_L] = primaryPower;
+
+			index++;
+			
+			
+			writeDebugStreamLine("LauncherDown_Helper) #4 loaded:%d", loaded);
+
+			waitUntil(SensorValue[Launcher1_Started] == 1);
+			
+			writeDebugStreamLine("LauncherDown_Helper) #4-1 loaded:%d", SensorValue[Launcher1_Started]);
+
+			//originalPower = 15;
+			//primaryPower = originalPower;
+	
+			//motor[Launcher1_H] = primaryPower;
+			//motor[Launcher1_L] = primaryPower;
+		}
+	}
+	while(count >= index); 
+
+	
+	writeDebugStreamLine("LauncherDown_Helper) #5 Count:%d, index:%d", count, index);
+
+	startTask(LauncherStop);
+	stopTask(RotateLoader);
+
+	return;
+}
+
+void LauncherDown_Helper_06()
 {
 	startTask(RotateLoader);
 
@@ -251,7 +355,7 @@ void LauncherDown_Helper_04()
 	unsigned long cTime = nPgmTime + 300;
 	waitUntil(cTime <= nPgmTime);
 
-	if (SensorValue[Launcher1_Loaded] == 1)
+	if (SensorValue[Launcher1_BallLoaded] == 1)
 	{
 		waitUntil(SensorValue[Launcher1_Ready] == 1);
 
@@ -311,7 +415,7 @@ void LauncherDown_Helper_05()
 	}
 	else
 	{
-		if (SensorValue[Launcher1_Loaded] == 1)
+		if (SensorValue[Launcher1_BallLoaded] == 1)
 		{
 			waitUntil(SensorValue[Launcher1_Ready] == 1);
 			//powerLoader = -120;
@@ -352,7 +456,7 @@ void LauncherDown_Helper_02()
 	waitUntil(abs(nMotorEncoder(Loader1)) >= 50);
 	motor[Loader1] = 0;
 
-	if (SensorValue[Launcher1_Loaded] == 1)
+	if (SensorValue[Launcher1_BallLoaded] == 1)
 	{
 		waitUntil(SensorValue[Launcher1_Ready] == 1);
 	}
@@ -465,15 +569,15 @@ void LauncherDown_Helper_Old()
 	int powerLoader = -45;
 	motor[Loader1] = powerLoader;
 
-	waitUntil(abs(nMotorEncoder(Loader1)) >= 90 || SensorValue[Launcher1_Loaded] == 1);
+	waitUntil(abs(nMotorEncoder(Loader1)) >= 90 || SensorValue[Launcher1_BallLoaded] == 1);
 
-	writeDebugStreamLine("LauncherDown_Helper) 00 Launcher1_Loaded :%d", SensorValue[Launcher1_Loaded]);
+	writeDebugStreamLine("LauncherDown_Helper) 00 Launcher1_Loaded :%d", SensorValue[Launcher1_BallLoaded]);
 	writeDebugStreamLine("LauncherDown_Helper) 00 Loader1 :%d", abs(nMotorEncoder(Loader1)));
 
 	motor[Loader1] = 0;
 
 	clearTimer(T3);
-	waitUntil(SensorValue[Launcher1_Loaded] == 1 || time1[T3] > 1000);
+	waitUntil(SensorValue[Launcher1_BallLoaded] == 1 || time1[T3] > 1000);
 
 	if (time1[T3] > 1000)
 	{
@@ -526,7 +630,7 @@ void LauncherDown_Helper_Old()
 
 	writeDebugStreamLine("LauncherDown_Helper) #3 launcherPosition :%d", abs(nMotorEncoder(Launcher1_L)));
 
-	waitUntil(SensorValue[Launcher1_Loaded] == 0 || abs(nMotorEncoder(Launcher1_L)) >= 509);
+	waitUntil(SensorValue[Launcher1_BallLoaded] == 0 || abs(nMotorEncoder(Launcher1_L)) >= 509);
 
 	writeDebugStreamLine("LauncherDown_Helper) #4 launcherPosition :%d", abs(nMotorEncoder(Launcher1_L)));
 
