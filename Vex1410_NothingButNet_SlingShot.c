@@ -130,7 +130,7 @@ task LaunchBall()
 {//
 	long startTime = nPgmTime;
 
-	LauncherDown_Helper(4);
+	LauncherDown_Helper(12);
 
 	writeDebugStreamLine("LaunchBall) Elapsed Time: %d", nPgmTime - startTime);
 	startTask(LauncherStop);
@@ -158,11 +158,42 @@ task LauncherDown()
 	LauncherDown_Helper(1);
 }
 
+
 task RotateLoader()
 {//
 		//waitUntil(SensorValue[Launcher1_Started] == 1);
 
-		int powerLoader = -25;
+		nMotorEncoder(Loader1) = 0;
+
+		int powerLoader = 35;
+		motor[Loader1] = powerLoader;
+
+
+		//Launcher_Loaded = false;
+		waitUntil(abs(nMotorEncoder(Loader1)) > 48);
+
+
+		writeDebugStreamLine("RotateLoader) #00 nMotorEncoder(Loader1) :%d", nMotorEncoder(Loader1));
+
+
+		motor[Loader1] = 0;
+		nMotorEncoder(Loader1) = 0;
+
+		powerLoader = -50;
+		motor[Loader1] = powerLoader;
+
+		//Launcher_Loaded = false;
+		waitUntil(abs(nMotorEncoder(Loader1)) > 20);
+
+		motor[Loader1] = 0;
+
+}
+
+task RotateLoader_01()
+{//
+		//waitUntil(SensorValue[Launcher1_Started] == 1);
+
+		int powerLoader = -40;
 		motor[Loader1] = powerLoader;
 
 		//nMotorEncoder(Loader1) = 0;
@@ -172,26 +203,115 @@ task RotateLoader()
 
 		unsigned long cTime = nPgmTime + 1000;
 
-		
+
 		int released = SensorValue[Launcher1_BallReleased];
 		while(released == 0 && cTime >= nPgmTime)
 		{
 			released = SensorValue[Launcher1_BallReleased];
 		}
-		
-		
+
+
 		writeDebugStreamLine("RotateLoader) #00 Launcher1_BallReleased :%d", released);
 
 		//powerLoader = 80;
 		//motor[Loader1] = powerLoader;
 
 		//wait1Msec(80);
-		
+
 		motor[Loader1] = 0;
-	
+
 }
 
+
 void LauncherDown_Helper(int count)
+{
+		int index = 1;
+	int launcherPower = 127;
+	int originalPower = launcherPower;
+
+	do
+	{
+			//startTask(RotateLoader);
+
+
+		int primaryPower = launcherPower;
+
+		motor[Launcher1_H] = primaryPower;
+		motor[Launcher1_L] = primaryPower;
+
+		//wait1Msec(100);
+
+		waitUntil(SensorValue[Launcher1_Ready] == 1);
+
+		writeDebugStreamLine("LauncherDown_Helper) #2 Launcher1_Ready :%d", SensorValue[Launcher1_Ready]);
+
+		unsigned long cTime = nPgmTime + 5000;
+
+		int loaded = SensorValue[Launcher1_BallLoaded];
+
+		while(loaded == 0 && cTime >= nPgmTime)
+		{
+			loaded = SensorValue[Launcher1_BallLoaded];
+
+			originalPower = 15;
+			primaryPower = originalPower;
+
+			motor[Launcher1_H] = primaryPower;
+			motor[Launcher1_L] = primaryPower;
+
+
+			writeDebugStreamLine("LauncherDown_Helper) #3-1 loaded:%d", loaded);
+
+		}
+
+		writeDebugStreamLine("LauncherDown_Helper) #3 loaded:%d", loaded);
+
+
+		if (loaded == 1)
+		{
+
+	    originalPower = launcherPower;
+			primaryPower = originalPower;
+
+			motor[Launcher1_H] = primaryPower;
+			motor[Launcher1_L] = primaryPower;
+
+			index++;
+
+
+			writeDebugStreamLine("LauncherDown_Helper) #4 loaded:%d", loaded);
+
+			wait1Msec(100);
+			waitUntil(SensorValue[Launcher1_Ready] == 1);
+
+			//waitUntil(SensorValue[Launcher1_Started] == 1);
+
+			//writeDebugStreamLine("LauncherDown_Helper) #4-1 loaded:%d", SensorValue[Launcher1_Started]);
+
+			//originalPower = 15;
+			//primaryPower = originalPower;
+
+			//motor[Launcher1_H] = primaryPower;
+			//motor[Launcher1_L] = primaryPower;
+		}
+
+
+	writeDebugStreamLine("LauncherDown_Helper) #5 Count:%d, index:%d", count, index);
+
+	}
+	while(count >= index);
+
+
+	writeDebugStreamLine("LauncherDown_Helper) #6 Count:%d, index:%d", count, index);
+
+	startTask(LauncherStop);
+	stopTask(RotateLoader);
+
+	return;
+
+}
+
+void LauncherDown_Helper_07(int count)
 {
 	int index = 1;
 	int launcherPower = 85;
@@ -204,7 +324,7 @@ void LauncherDown_Helper(int count)
 		motor[Launcher1_H] = primaryPower;
 		motor[Launcher1_L] = primaryPower;
 
-		
+
 		waitUntil(SensorValue[Launcher1_Started] == 1);
 
 		writeDebugStreamLine("LauncherDown_Helper) #1 Launcher1_Loaded :%d", SensorValue[Launcher1_Started]);
@@ -213,61 +333,61 @@ void LauncherDown_Helper(int count)
 
 		//waitUntil(SensorValue[Launcher1_BallReleased] == 1);
 
-		
+
 		writeDebugStreamLine("LauncherDown_Helper) #1-1 Launcher1_Ready :%d", SensorValue[Launcher1_Ready]);
-		
+
 		//wait1Msec(100);
-		
+
 		waitUntil(SensorValue[Launcher1_Ready] == 1);
 
 		writeDebugStreamLine("LauncherDown_Helper) #2 Launcher1_Ready :%d", SensorValue[Launcher1_Ready]);
-		
+
 		unsigned long cTime = nPgmTime + 1000;
 
 		int loaded = SensorValue[Launcher1_BallLoaded];
 		while(loaded == 0 && cTime >= nPgmTime)
 		{
 			loaded = SensorValue[Launcher1_BallLoaded];
-			
+
 			originalPower = 15;
 			primaryPower = originalPower;
-	
+
 			motor[Launcher1_H] = primaryPower;
 			motor[Launcher1_L] = primaryPower;
 
 		}
-		
+
 		writeDebugStreamLine("LauncherDown_Helper) #3 loaded:%d", loaded);
 
 
 		if (loaded == 1)
 		{
-			
+
 	    originalPower = launcherPower;
 			primaryPower = originalPower;
-	
+
 			motor[Launcher1_H] = primaryPower;
 			motor[Launcher1_L] = primaryPower;
 
 			index++;
-			
-			
+
+
 			writeDebugStreamLine("LauncherDown_Helper) #4 loaded:%d", loaded);
 
 			waitUntil(SensorValue[Launcher1_Started] == 1);
-			
+
 			writeDebugStreamLine("LauncherDown_Helper) #4-1 loaded:%d", SensorValue[Launcher1_Started]);
 
 			//originalPower = 15;
 			//primaryPower = originalPower;
-	
+
 			//motor[Launcher1_H] = primaryPower;
 			//motor[Launcher1_L] = primaryPower;
 		}
 	}
-	while(count >= index); 
+	while(count >= index);
 
-	
+
 	writeDebugStreamLine("LauncherDown_Helper) #5 Count:%d, index:%d", count, index);
 
 	startTask(LauncherStop);
