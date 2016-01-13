@@ -1,12 +1,12 @@
 #pragma config(I2C_Usage, I2C1, i2cSensors)
 #pragma config(Sensor, in1,    ExternalBatteryValue, sensorAnalog)
-#pragma config(Sensor, in2,    LauncherPosition, sensorPotentiometer)
-#pragma config(Sensor, in3,    BallDispenserPosition, sensorPotentiometer)
+#pragma config(Sensor, in2,    BallDispenserPosition, sensorPotentiometer)
+#pragma config(Sensor, in3,    LauncherPosition, sensorPotentiometer)
 #pragma config(Sensor, dgtl3,  BallLoaded,     sensorTouch)
-#pragma config(Sensor, dgtl4,  BallReleased,     sensorTouch)
+#pragma config(Sensor, dgtl4,  BallReleased,   sensorTouch)
 #pragma config(Sensor, dgtl5,  Jumper1,        sensorDigitalIn)
-#pragma config(Sensor, I2C_1,  FrontLeft_I2C,  sensorQuadEncoderOnI2CPort,    , AutoAssign)
-#pragma config(Motor,  port1,           Belt,          tmotorVex393_HBridge, openLoop)
+#pragma config(Sensor, I2C_1,  FrontLeft_I2C,  sensorQuadEncoderOnI2CPort,    , AutoAssign )
+#pragma config(Motor,  port1,           Belt,          tmotorVex393_HBridge, openLoop, reversed)
 #pragma config(Motor,  port2,           FrontLeft,     tmotorVex393_MC29, openLoop, reversed, driveLeft, encoderPort, None)
 #pragma config(Motor,  port3,           FrontRight,    tmotorVex393_MC29, openLoop, driveRight, encoderPort, I2C_1)
 #pragma config(Motor,  port4,           Launcher1,     tmotorVex393_MC29, openLoop, reversed)
@@ -59,9 +59,10 @@ task displayBatteryLevelOnLCD();
 
 enum GameMode{
 	Far = 0,
-	Middle = 1,
-	Near = 2,
-	Farthest = 3,
+	FarMid = 1,
+	Middle = 2,
+	Near = 3,
+	Farthest = 4,
 };
 
 int powerForDispenser = 80;
@@ -76,7 +77,7 @@ int powerToStay = 19;
 int powerToLaunch = 89;
 int positionToStop = 1380;
 
-int powerToLaunch_Farthest = 94;
+int powerToLaunch_Farthest = 95;
 int positionToStop_Farthest = 1390;
 
 int powerToLaunch_Mid = 67;
@@ -332,7 +333,7 @@ task LauncherUp()
 
 	clearTimer(T1);
 	while(time1[T1] < 110)
-	//while(SensorValue[LauncherPosition] < local_positionToStop  && time1[T1] < 500)
+		//while(SensorValue[LauncherPosition] < local_positionToStop  && time1[T1] < 500)
 	{
 	}
 
@@ -370,7 +371,7 @@ task LauncherUp_Farthest()
 
 	clearTimer(T1);
 	while(time1[T1] < 130)
-	//while(SensorValue[LauncherPosition] < positionToStop_Farthest && time1[T1] < 500)
+		//while(SensorValue[LauncherPosition] < positionToStop_Farthest && time1[T1] < 500)
 	{
 	}
 
@@ -379,6 +380,47 @@ task LauncherUp_Farthest()
 		startTask(LauncherStop);
 		return;
 	}
+
+	startTask(LauncherStop);
+	//int power1 = 0;
+	//motor[Launcher1] = power1;
+	//motor[Launcher2] = power1;
+	//motor[Launcher3] = power1;
+	//motor[Launcher4] = power1;
+}
+
+task LauncherUp_FarMid()
+{
+	//startTask(LauncherStop);
+
+	//int positionToStop = 1480;
+	//int local_positionToStop = SensorValue[LauncherPosition] + 200;
+	int local_positionToStop = positionToStop;
+
+	int originalPower = powerToLaunch - 10;
+	int originalPower_external = powerToLaunch - 10;
+
+	int primaryPower = AdjustPowerUsingBatteryLevel(originalPower) * -1;
+	int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower_external) * -1;
+	writeDebugStreamLine("LauncherUp_Short) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
+
+	motor[Launcher1] = externalPower;
+	motor[Launcher2] = externalPower;
+	motor[Launcher3] = primaryPower;
+	motor[Launcher4] = primaryPower;
+
+
+	clearTimer(T1);
+	while(time1[T1] < 110)
+		//while(SensorValue[LauncherPosition] < local_positionToStop  && time1[T1] < 500)
+	{
+	}
+
+	//if (time1[T1] > 500)
+	//{
+	//	startTask(LauncherStop);
+	//	return;
+	//}
 
 	startTask(LauncherStop);
 	//int power1 = 0;
@@ -498,7 +540,7 @@ task LauncherUp_Short()
 	//clearTimer(T1);
 	unsigned long time = nPgmTime + 85;
 	while(nPgmTime < time)
-	//while(SensorValue[LauncherPosition] < local_positionToStop && time1[T1] < 500)
+		//while(SensorValue[LauncherPosition] < local_positionToStop && time1[T1] < 500)
 	//for(int i=0;i<3500;i++)
 	{
 	}
@@ -628,26 +670,26 @@ task LauncherDown()
 	//}
 	//else
 	//{
-		wait1Msec(300);
+	wait1Msec(300);
 
-		//startTask(LauncherUp_Short);
+	//startTask(LauncherUp_Short);
 
-		if (LauncherRange == Near)
-		{
-			startTask(LauncherUp_Short);
-		}
-		else if (LauncherRange == Middle)
-		{
-			startTask(LauncherUp_Mid);
-		}
-		else if (LauncherRange == Farthest)
-		{
-			startTask(LauncherUp_Farthest);
-		}
-		else
-		{
-			startTask(LauncherUp);
-		}
+	if (LauncherRange == Near)
+	{
+		startTask(LauncherUp_Short);
+	}
+	else if (LauncherRange == Middle)
+	{
+		startTask(LauncherUp_Mid);
+	}
+	else if (LauncherRange == Farthest)
+	{
+		startTask(LauncherUp_Farthest);
+	}
+	else
+	{
+		startTask(LauncherUp);
+	}
 	//}
 }
 
@@ -862,8 +904,8 @@ void ForBack(int originalPower, int distance)
 
 	StopMoving();
 	int startPower = 30;
-motor[FrontLeft] = (power > 0)? startPower: -startPower; // + (power * 5) / 100;
-motor[BackRight] = (power > 0)? startPower: -startPower; // + (power * 5) / 100;
+	motor[FrontLeft] = (power > 0)? startPower: -startPower; // + (power * 5) / 100;
+	motor[BackRight] = (power > 0)? startPower: -startPower; // + (power * 5) / 100;
 
 	wait1Msec(200);
 
@@ -996,26 +1038,37 @@ task usercontrol()
 		{
 			//nMotorEncoder(FrontRight) = 0;
 			//ForBack(-80, 1000);
-
-			stopTask(LauncherDown);
-
-			wait1Msec(10);
-
-			if (LauncherRange == Near)
+			if (motor[Launcher1] == 0)
 			{
-				startTask(LauncherUp_Short);
-			}
-			else if (LauncherRange == Middle)
-			{
-				startTask(LauncherUp_Mid);
-			}
-			else if (LauncherRange == Farthest)
-			{
-				startTask(LauncherUp_Farthest);
+				stopTask(AutoLaunchBall);
+				wait1Msec(100);
+
+				LauncherRange = FarMid;
+				startTask(AutoLaunchBall);
 			}
 			else
 			{
-				startTask(LauncherUp);
+
+				stopTask(LauncherDown);
+
+				wait1Msec(10);
+
+				if (LauncherRange == Near)
+				{
+					startTask(LauncherUp_Short);
+				}
+				else if (LauncherRange == Middle)
+				{
+					startTask(LauncherUp_Mid);
+				}
+				else if (LauncherRange == Farthest)
+				{
+					startTask(LauncherUp_Farthest);
+				}
+				else
+				{
+					startTask(LauncherUp);
+				}
 			}
 		}
 		else if (btn8d == 1)
@@ -1296,7 +1349,7 @@ task AutoLaunchBall()
 
 	startTask(CloseDispenser);
 
-	 lastLaunchTime = nPgmTime;
+	lastLaunchTime = nPgmTime;
 
 	if(time1[T3] >= 4000)
 	{
@@ -1323,6 +1376,10 @@ task AutoLaunchBall()
 		else if (LauncherRange == Middle)
 		{
 			startTask(LauncherUp_Mid);
+		}
+		else if (LauncherRange == FarMid)
+		{
+			startTask(LauncherUp_FarMid);
 		}
 		else if (LauncherRange == Farthest)
 		{
@@ -1375,12 +1432,12 @@ task MoveBeltToReadyFirstBall()
 
 	wait1Msec(200);
 	motor[Belt] = 0;
-	
+
 	beltPower = 110;
 	beltPower = AdjustPowerUsingBatteryLevel(beltPower);
 
 	motor[Belt] = beltPower;
-	
+
 	clearTimer(T4);
 	while(time1[T4] < 1300)
 	{
