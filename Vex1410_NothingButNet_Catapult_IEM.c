@@ -41,6 +41,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 
 task LauncherUp();
+task LauncherUp_LongMid();
 task LauncherStop();
 task LauncherDown();
 task LaunchBall();
@@ -54,7 +55,7 @@ task MoveBeltToReadyFirstBall();
 task AutoLaunchBall();
 task displayBatteryLevelOnLCD();
 task StartBelt();
-task StopAutonomous();
+//task StopAutonomous();
 
 // Global variables
 
@@ -104,6 +105,7 @@ int positionToStop_Short = 23;
 
 long lastLaunchTime = 0;
 
+int autonomousMode = 1;
 
 //int postionToDown = 1280;
 //int postionToDown = 2900;
@@ -126,8 +128,11 @@ void SonarRotate(int power, int distance);
 void SonarForBack(int power, int distance);
 void EncoderRotate(int power, int distance);
 void EncoderForBack(int power, int distance);
-
 void ForBackHelper(int power);
+void LaunchBall_ProgrammingSkill_Helper();
+void LaunchBall_Autonomous_Final();
+void PickBalls_Left();
+void PickBalls_Right();
 
 void pre_auton()
 {
@@ -156,7 +161,17 @@ task autonomous()
 	// Insert user code here.
 	// .....................................................................................
 
+	//if ((short)ExternalBatteryValue < 500)
+	//{
+	//	startTask(StartBelt);
+	//}
+	//else
+
 	if (SensorValue[Jumper1] == 0)
+	{
+		startTask(StartBelt);
+	}
+	else if (autonomousMode == 4)
 	{
 		startTask(LaunchBall_ProgrammingSkill);
 	}
@@ -165,6 +180,10 @@ task autonomous()
 		//startTask(StopAutonomous);
 		LaunchBall_Autonomous();
 		PickBalls();
+		wait1Msec(2300);
+
+		//LauncherRange = LongMid;
+		LaunchBall_Autonomous_Final();
 	}
 
 }
@@ -176,27 +195,64 @@ task autonomous()
 //	stopTask(autonomous);
 //}
 
+
 void PickBalls()
+{
+	if (autonomousMode == 1)
+	{
+		PickBalls_Left();
+	}
+	else
+	{
+		PickBalls_Right();
+	}
+}
+
+void PickBalls_Left()
+{
+	nMotorEncoder(FrontLeft) = 0;
+	EncoderRotate(-40, 40);
+
+	wait1Msec(100);
+
+	startTask(StartBelt);
+
+	nMotorEncoder(FrontLeft) = 0;
+	EncoderForBack(30, 1100);
+
+	wait1Msec(100);
+
+	nMotorEncoder(FrontLeft) = 0;
+	EncoderRotate(40, 23);
+}
+
+void PickBalls_Right()
 {
 	nMotorEncoder(FrontLeft) = 0;
 	EncoderRotate(40, 97);
 
 	wait1Msec(100);
-	
+
 	startTask(StartBelt);
 
 	nMotorEncoder(FrontLeft) = 0;
 	EncoderForBack(30, 1000);
 
+
+	wait1Msec(100);
+
+	nMotorEncoder(FrontLeft) = 0;
+	EncoderRotate(-40, 97);
+
 	//wait1Msec(1500);
-	
+
 	//nMotorEncoder(FrontLeft) = 0;
 	//EncoderRotate(-40, 140);
-	
+
 	//LauncherRange = LongMid;
 	//startTask(AutoLaunchBall);
 
-	
+
 	//SonarForBack();
 
 
@@ -213,8 +269,8 @@ void PickBalls()
 	//startTask(StartBelt);
 
 	//nMotorEncoder(FrontLeft) = 0;
-	//EncoderForBack(30, 650);	
-	
+	//EncoderForBack(30, 650);
+
 }
 
 void PickBalls_Old()
@@ -235,10 +291,10 @@ void PickBalls_Old()
 	startTask(StartBelt);
 
 	nMotorEncoder(FrontLeft) = 0;
-	EncoderForBack(30, 650);	
-	
+	EncoderForBack(30, 650);
+
 	//wait1Msec(2000);
-	
+
 	//nMotorEncoder(FrontLeft) = 0;
 	//EncoderRotate(-70, 160);
 
@@ -246,7 +302,7 @@ void PickBalls_Old()
 
 	//LauncherRange = LongMid;
 	//startTask(AutoLaunchBall);
-			
+
 	//SonarForBack(50, 150);
 }
 
@@ -337,6 +393,43 @@ task StartBelt()
 	motor[Belt] = beltPower;
 }
 
+
+void LaunchBall_Autonomous_Final()
+{
+
+	LauncherDown_Helper();
+	//startTask(LauncherDown);
+
+	// Open the dispenser
+	startTask(OpenDispenser);
+
+	// Wait until a ball loaded
+	clearTimer(T3);
+	while(SensorValue[BallLoaded] == 0 && time1[T3] < 2000)
+	{
+	}
+
+	// Close the dispenser
+	startTask(CloseDispenser);
+	//if (i == 0)
+	//{
+	//	wait1Msec(200);
+	//motor[Belt] = 0;
+	//}
+	// Timeout and move the launcher to the original position
+	if(time1[T3] >= 2000)
+	{
+		//startTask(LauncherUp);
+		startTask(LauncherStop);
+	}
+	else
+	{
+		// Ball is loaded, launch the ball
+		wait1Msec(400);
+		startTask(LauncherUp_LongMid);
+	}
+}
+
 void LaunchBall_Autonomous()
 {
 	writeDebugStreamLine("(autonomous started) Time: %d, %d", nPgmTime, nSysTime);
@@ -346,8 +439,8 @@ void LaunchBall_Autonomous()
 	while(true)
 	{
 		// Repeat for 4 times (4 preloads)
-		if (i > 3 || j > 5)
-		//if (i > 0 || j > 5)
+		//if (i > 3 || j > 5)
+		if (i > 0 || j > 5)
 		{
 			break;
 		}
@@ -465,6 +558,37 @@ task displayBatteryLevelOnLCD()
 {
 	bLCDBacklight=true;
 
+
+	clearLCDLine(0);                                            // Clear line 1 (0) of the LCD
+	clearLCDLine(1);                                            // Clear line 2 (1) of the LCD
+
+	string text;
+	//}
+	switch(autonomousMode)
+	{
+	case 1:
+		{
+			text = "Left";
+			break;
+		}
+	case 2:
+		{
+			text = "Right";
+			break;
+		}
+	case 4:
+		{
+			text = "ProgrammingSkill";
+			break;
+		}
+	}
+
+	//Display the Primary Robot battery voltage
+	displayLCDString(0, 0, "Autonomous: ");
+	displayLCDString(1, 0, text);
+
+	wait1Msec(500);
+
 	//while(true)                                                        // An infinite loop to keep the program running until you terminate it
 	//{
 	clearLCDLine(0);                                            // Clear line 1 (0) of the LCD
@@ -484,10 +608,13 @@ task displayBatteryLevelOnLCD()
 	displayNextLCDString(externalBattery);
 
 	//Short delay for the LCD refresh rate
-	wait1Msec(700);
-	//}
+	wait1Msec(500);
+
 
 	bLCDBacklight=false;
+
+
+
 }
 
 int AdjustPowerUsingBatteryLevel(int originalPower)
@@ -810,6 +937,27 @@ task LauncherDown()
 {
 	LauncherDown_Helper();
 
+	//clearTimer(T3);
+	//while(SensorValue[BallLoaded] == 0 && time1[T3] < 2000)
+	//{
+	//}
+
+	//if(time1[T3] >= 2000)
+	//{
+	//	startTask(LauncherStop);
+	//}
+	//else
+	//{
+	//	if (LauncherRange == LongMid)
+	//	{
+	//		startTask(LauncherUp_LongMid);
+	//	}
+	//	else
+	//	{
+	//		startTask(LauncherUp);
+	//	}
+	//}
+
 	// T3
 	//int power = 70; // perfect but strong
 
@@ -988,8 +1136,8 @@ void LauncherDown_Helper()
 
 task LaunchBall()
 {
-	for (int i=0;i<10;i++)
-		//while(true)
+	//for (int i=0;i<10;i++)
+	while(true)
 	{
 		LaunchBall_Helper();
 	}
@@ -997,12 +1145,11 @@ task LaunchBall()
 
 void LaunchBall_Helper()
 {
-	SensorValue[Led1] = false;
+	SensorValue[Led1] = true;
 
 	LauncherDown_Helper();
 	//startTask(LauncherDown);
 
-	SensorValue[Led1] = true;
 
 	clearTimer(T3);
 	while(SensorValue[BallLoaded] == 0 && time1[T3] < 4000)
@@ -1017,7 +1164,17 @@ void LaunchBall_Helper()
 	{
 		//wait1Msec(450);
 		wait1Msec(300);
+
 		startTask(LauncherUp);
+		//
+		//if (LauncherRange == LongMid)
+		//{
+		//	startTask(LauncherUp_LongMid);
+		//}
+		//else
+		//{
+		//	startTask(LauncherUp);
+		//}
 
 		//if (LauncherRange == Near)
 		//{
@@ -1050,6 +1207,31 @@ void LaunchBall_Helper()
 }
 
 task LaunchBall_ProgrammingSkill()
+{
+	LaunchBall_ProgrammingSkill_Helper();
+}
+
+void LaunchBall_ProgrammingSkill_Helper()
+{ // Skills
+	LauncherRange = Long;
+	for (int i=0;i<3;i++)
+		//while(true)
+	{
+		LaunchBall_Helper();
+		i++;
+
+		if (i == 1)
+		{
+			//LauncherRange = Long;
+
+			TravelToTheOtherSide();
+			wait1Msec(300); // Skill
+
+		}
+	}
+}
+
+void LaunchBall_ProgrammingSkill_Turn_Helper()
 { // Skills
 	int i = 0;
 	while(true)
@@ -1094,11 +1276,11 @@ task LaunchBall_ProgrammingSkill()
 			//wait1Msec(150);
 			//startTask(LauncherStop);
 		}
-		//if (i == 32)
-		//{
-		//	TravelToTheOtherSide();
-		//	wait1Msec(300); // Skill
-		//}
+		if (i == 32)
+		{
+			TravelToTheOtherSide();
+			wait1Msec(300); // Skill
+		}
 
 		wait1Msec(300); // Skill
 
@@ -1182,7 +1364,7 @@ void EncoderRotate(int power, int distance)
 	while (current + offset < distance)
 	{
 		int previous = current;
-		
+
 		RotateHelper(power);
 
 		int current = abs(nMotorEncoder(FrontLeft));
@@ -1194,33 +1376,71 @@ void EncoderRotate(int power, int distance)
 	StopMoving();
 }
 
+
+void TravelToTheOtherSide_Straight()
+{
+	//wait1Msec(100);
+	//nMotorEncoder(FrontLeft) = 0;
+	//EncoderForBack(30, 100);
+
+
+	nMotorEncoder(FrontLeft) = 0;
+	EncoderRotate(60, 250);
+
+	wait1Msec(100);
+	//nMotorEncoder(FrontLeft) = 0;
+	//EncoderForBack(-100, 1900);
+	ForBackHelper(30);
+	wait1Msec(350);
+	//wait1Msec(100);
+
+	nMotorEncoder(FrontLeft) = 0;
+	EncoderForBack(-100, 2400);
+
+	ForBackHelper(-30);
+	wait1Msec(800);
+
+	StopMoving();
+
+	nMotorEncoder(FrontLeft) = 0;
+	EncoderRotate(-60, 50);
+
+}
+
 void TravelToTheOtherSide()
 {
-	wait1Msec(100);
 
 	// Turn right to the center
-	nMotorEncoder(FrontRight) = 0;
-	EncoderRotate(-50, 38);
 
-	wait1Msec(100);
+	//wait1Msec(100);
+	//nMotorEncoder(FrontLeft) = 0;
+	//EncoderRotate(-50, 38);
+
+	//wait1Msec(100);
 
 	// Move forward
-	nMotorEncoder(FrontRight) = 0;
-	EncoderForBack(-80, 920);
+	nMotorEncoder(FrontLeft) = 0;
+	EncoderForBack(50, 1400);
 
-	wait1Msec(200);
+	wait1Msec(1000);
 
 	// Turn left to the other side
-	nMotorEncoder(FrontRight) = 0;
-	EncoderRotate(50, 420);
+	nMotorEncoder(FrontLeft) = 0;
+	EncoderRotate(50, 290);
 
-	wait1Msec(100);
+	wait1Msec(1000);
 
 	// Move backward
-	nMotorEncoder(FrontRight) = 0;
-	EncoderForBack(80, 640);
+	nMotorEncoder(FrontLeft) = 0;
+	EncoderForBack(-50, 1090);
 
-	wait1Msec(100);
+
+	//ForBackHelper(-30);
+
+	wait1Msec(1000);
+	StopMoving();
+
+	//wait1Msec(100);
 
 	// Turn right to the goal
 	//nMotorEncoder(FrontRight) = 0;
@@ -1241,20 +1461,28 @@ task usercontrol()
 {
 	// User control code here, inside the loop
 	LauncherRange = Long;
+	startTask(CloseDispenser);
 
 	while (true)
 	{
 		wait1Msec(50);
 
 		int btnLCD = nLCDButtons;
-		if (btnLCD >= 2)
+		if (btnLCD > 0)
 		{
+			autonomousMode = btnLCD;
 			startTask(displayBatteryLevelOnLCD);
 		}
-		else if (btnLCD == 1)
-		{
-			stopTask(displayBatteryLevelOnLCD);
-		}
+
+		//int btnLCD = nLCDButtons;
+		//if (btnLCD >= 2)
+		//{
+		//	startTask(displayBatteryLevelOnLCD);
+		//}
+		//else if (btnLCD == 1)
+		//{
+		//	stopTask(displayBatteryLevelOnLCD);
+		//}
 
 
 		int btn5u = vexRT[Btn5U]; // start belt
@@ -1311,6 +1539,10 @@ task usercontrol()
 				{
 					startTask(LauncherUp_Mid);
 				}
+				else if (LauncherRange == LongMid)
+				{
+					startTask(LauncherUp_LongMid);
+				}
 				else if (LauncherRange == Longest)
 				{
 					startTask(LauncherUp_Longest);
@@ -1346,7 +1578,7 @@ task usercontrol()
 		{
 			if (SensorValue[Jumper1] == 0)
 			{
-				TravelToTheOtherSide();
+				//TravelToTheOtherSide();
 			}
 			else
 			{
@@ -1471,24 +1703,24 @@ task StopBelt()
 /*
 task DispenseBall()
 {
-	motor[Belt] = 0;
-	wait1Msec(100);
+motor[Belt] = 0;
+wait1Msec(100);
 
-	motor[Belt] = -80;
-	wait1Msec(100);
-	motor[Belt] = 0;
+motor[Belt] = -80;
+wait1Msec(100);
+motor[Belt] = 0;
 
 
-	startTask(OpenDispenser);
+startTask(OpenDispenser);
 
-	wait1Msec(50);
+wait1Msec(50);
 
-	motor[Belt] = 80;
+motor[Belt] = 80;
 
-	startTask(CloseDispenser);
+startTask(CloseDispenser);
 
-	wait1Msec(1600);
-	motor[Belt] = 0;
+wait1Msec(1600);
+motor[Belt] = 0;
 }
 */
 task OpenDispenser()
@@ -1551,6 +1783,8 @@ task AutoLaunchBall()
 	//	originalPower += 4;
 	//}
 
+	SensorValue[Led1] = true;
+
 	LauncherDown_Helper();
 
 	//clearTimer(T3);
@@ -1581,6 +1815,7 @@ task AutoLaunchBall()
 		ballLoaded = SensorValue[BallLoaded];
 	}
 
+	SensorValue[Led1] = false;
 
 	if (ballReleased > 0)
 	{
@@ -1621,6 +1856,7 @@ task AutoLaunchBall()
 		if (LauncherRange == Near)
 		{
 			startTask(LauncherUp_Short);
+			//startTask(LauncherUp_Mid);
 		}
 		else if (LauncherRange == Middle)
 		{
