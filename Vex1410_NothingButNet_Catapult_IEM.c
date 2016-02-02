@@ -124,8 +124,6 @@ void LauncherDown_Helper();
 void RotateHelper(int power);
 void LaunchBall_Autonomous();
 void PickBalls();
-void SonarRotate(int power, int distance);
-void SonarForBack(int power, int distance);
 void EncoderRotate(int power, int distance);
 void EncoderForBack(int power, int distance);
 void ForBackHelper(int power);
@@ -273,52 +271,6 @@ void PickBalls_Right()
 
 }
 
-void PickBalls_Old()
-{
-	//SonarForBack();
-
-
-	//EncoderRotate(-40, 80);
-
-	//ForBackHelper(50);
-	nMotorEncoder(FrontLeft) = 0;
-	EncoderForBack(70, 320);
-	wait1Msec(100);
-	//SonarRotate(38, 350);
-	nMotorEncoder(FrontLeft) = 0;
-	EncoderRotate(40, 90);
-	wait1Msec(100);
-	startTask(StartBelt);
-
-	nMotorEncoder(FrontLeft) = 0;
-	EncoderForBack(30, 650);
-
-	//wait1Msec(2000);
-
-	//nMotorEncoder(FrontLeft) = 0;
-	//EncoderRotate(-70, 160);
-
-	//wait1Msec(2000);
-
-	//LauncherRange = LongMid;
-	//startTask(AutoLaunchBall);
-
-	//SonarForBack(50, 150);
-}
-
-void SonarRotate(int power, int distance)
-{
-	RotateHelper(power);
-	wait1Msec(1000);
-
-	while (SensorValue[SonarSensor] == -1 || abs(SensorValue[SonarSensor]) > distance  /*&& abs(nMotorEncoder(FrontLeft)) < 450 */)
-	{
-		RotateHelper(power);
-	}
-
-	StopMoving();
-}
-
 void RotateHelper(int power)
 {
 	int adjustedPower = AdjustPowerUsingBatteryLevel(power);
@@ -327,23 +279,6 @@ void RotateHelper(int power)
 	motor[FrontRight] = -adjustedPower;
 	motor[BackLeft] = adjustedPower;
 	motor[BackRight] = -adjustedPower;
-}
-
-void SonarForBack(int power, int distance)
-{
-	ForBackHelper(power);
-
-	//while (abs(SensorValue[SonarSensor]) > 100 /*&& abs(nMotorEncoder(FrontLeft)) < 450 */)
-	//{
-	//	ForBackHelper(power);
-	//}
-
-	while (abs(SensorValue[SonarSensor]) < distance /*&& abs(nMotorEncoder(FrontLeft)) < 450 */)
-	{
-		ForBackHelper(power);
-	}
-
-	StopMoving();
 }
 
 void EncoderForBack(int power, int distance)
@@ -1008,64 +943,6 @@ task LauncherDown()
 	*/
 }
 
-void LauncherDown_Helper_Touch()
-{
-	//int power = motor[Launcher1];
-
-	//if (power != 0)
-	//{
-	//	return;
-	//}
-
-	int originalPower = powerToDown;
-	int primaryPower = AdjustPowerUsingBatteryLevel(originalPower);
-	int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower);
-	writeDebugStreamLine("LauncherDown_Helper) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
-
-
-	nMotorEncoder(Launcher4) = 0;
-	clearTimer(T1);
-
-	motor[Launcher1] = externalPower;
-	motor[Launcher2] = externalPower;
-	motor[Launcher3] = primaryPower;
-	motor[Launcher4] = primaryPower;
-
-	while(SensorValue[LauncherReady] == 0 && time1[T1] < 80)
-	{
-	}
-
-	writeDebugStreamLine("LauncherDown_Helper #1) LauncherPosition: %d", abs(nMotorEncoder(Launcher4)));
-
-
-	clearTimer(T1);
-
-	//originalPower = powerToDown2;
-	//primaryPower = AdjustPowerUsingBatteryLevel(originalPower);
-	//externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower);
-	//motor[Launcher1] = externalPower;
-	//motor[Launcher2] = externalPower;
-	//motor[Launcher3] = primaryPower;
-	//motor[Launcher4] = primaryPower;
-
-	int local_positionToStop = postionToDown;
-
-	while(abs(nMotorEncoder(Launcher4)) < local_positionToStop && time1[T1] < 1000)
-	{
-	}
-
-	originalPower = powerToStay;
-	primaryPower = AdjustPowerUsingBatteryLevel(originalPower);
-	externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower);
-	motor[Launcher1] = externalPower;
-	motor[Launcher2] = externalPower;
-	motor[Launcher3] = primaryPower;
-	motor[Launcher4] = primaryPower;
-
-	writeDebugStreamLine("LauncherDown_Helper #2) LauncherPosition: %d", abs(nMotorEncoder(Launcher4)));
-}
-
-
 void LauncherDown_Helper_IEM()
 {
 	int power = motor[Launcher1];
@@ -1150,7 +1027,6 @@ void LaunchBall_Helper()
 	LauncherDown_Helper();
 	//startTask(LauncherDown);
 
-
 	clearTimer(T3);
 	while(SensorValue[BallLoaded] == 0 && time1[T3] < 4000)
 	{
@@ -1214,13 +1090,16 @@ task LaunchBall_ProgrammingSkill()
 void LaunchBall_ProgrammingSkill_Helper()
 { // Skills
 	LauncherRange = Long;
-	for (int i=0;i<3;i++)
-		//while(true)
+
+	int i = 0;
+	//for (int i=0;i<3;i++)
+	while(true)
 	{
+		//{
 		LaunchBall_Helper();
 		i++;
 
-		if (i == 1)
+		if (i == 32)
 		{
 			//LauncherRange = Long;
 
@@ -1287,71 +1166,6 @@ void LaunchBall_ProgrammingSkill_Turn_Helper()
 		//wait1Msec(300); // Drive
 	}
 }
-
-void ForBack_Old(int originalPower, int distance)
-{
-	//motor[FrontLeft] = power;
-	//motor[FrontRight] = power;
-	//motor[BackRight] = power;
-	//motor[BackLeft] = power;
-
-	//wait1Msec(distance);
-
-	float power = originalPower;
-
-	if (power == 0) return;
-
-	//int startPower = 30;
-	//	motor[FrontLeft] = (power > 0)? startPower: -startPower; // + (power * 5) / 100;
-	//	motor[BackRight] = (power > 0)? startPower: -startPower; // + (power * 5) / 100;
-
-	//	wait1Msec(100);
-
-	int current = abs(nMotorEncoder(FrontRight));
-	float offset = 0;
-
-	// RED only for programming skill
-	//power = -power;
-	float distanceMid = distance / 2;
-	float powerMid = power * 1 / 3;
-
-	while (current + offset < distance)
-	{
-		if (current + offset > distanceMid)
-		{
-			power = powerMid;
-		}
-
-		int previous = current;
-
-		//writeDebugStreamLine("ForBack) power: %f, current + offset: %f, distance: %f, distanceMid: %f", power, current + offset, distance, distanceMid);
-
-		motor[FrontLeft] = power  + (power * 0.1);
-		motor[FrontRight] = power + (power * 0.1);
-		motor[BackRight] = power ;
-		motor[BackLeft] = power;
-
-
-		writeDebugStreamLine("ForBack) power: %d, current + offset: %f, FrontLeft: %d, FrontRight: %d, BackLeft: %d, BackRight: %d", power, current + offset, motor[FrontLeft], motor[FrontRight], motor[BackLeft], motor[BackRight]);
-
-
-		int current = abs(nMotorEncoder(FrontRight));
-
-		offset = current - previous;
-		offset = offset * 1.2;
-	}
-
-
-	StopMoving();
-	int startPower = 30;
-	motor[FrontLeft] = (power > 0)? startPower: -startPower; // + (power * 5) / 100;
-	motor[BackRight] = (power > 0)? startPower: -startPower; // + (power * 5) / 100;
-
-	wait1Msec(200);
-
-	StopMoving();
-}
-
 
 void EncoderRotate(int power, int distance)
 {
@@ -1931,4 +1745,3 @@ task MoveBeltToReadyFirstBall()
 	motor[Belt] = 0;
 
 }
-
