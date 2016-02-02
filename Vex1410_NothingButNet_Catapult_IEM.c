@@ -46,13 +46,14 @@ task LauncherStop();
 task LauncherDown();
 task LaunchBall();
 task LaunchBall_ProgrammingSkill();
-task StopBelt();
+//task StopBelt();
 //task DispenseBall();
 task OpenDispenser();
 task CloseDispenser();
 task MoveBeltToReadyBall();
 task MoveBeltToReadyFirstBall();
 task AutoLaunchBall();
+task AutoLaunchBall_Full();
 task displayBatteryLevelOnLCD();
 task StartBelt();
 //task StopAutonomous();
@@ -77,7 +78,7 @@ int powerForDispenser = 80;
 GameMode LauncherRange = Long;
 
 int globalWaiter = 179;
-int powerToDown = 80;
+int powerToDown = 79;
 int postionToDown = 60;
 int powerToStay = 19;
 
@@ -131,6 +132,9 @@ void LaunchBall_ProgrammingSkill_Helper();
 void LaunchBall_Autonomous_Final();
 void PickBalls_Left();
 void PickBalls_Right();
+void AutoLaunchBall_Full_Helper();
+void StopBelt();
+//void AutoLaunchBall_Full();
 
 void pre_auton()
 {
@@ -583,7 +587,7 @@ void LauncherUp_Helper()
 	int originalPower = powerToLaunch;
 	int originalPower_external = powerToLaunch;
 
-	int local_positionToStop = positionToStop;
+	//int local_positionToStop = positionToStop;
 
 	int primaryPower = AdjustPowerUsingBatteryLevel(originalPower) * -1;
 	int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower_external) * -1;
@@ -1320,7 +1324,7 @@ task usercontrol()
 		{
 			power1 = power1 * 90 / 100;
 		}
-		int power7 = 70; // shift
+
 		int btn7r = vexRT[Btn7R]; // shift
 		int btn7l = vexRT[Btn7L]; // shift
 
@@ -1408,7 +1412,7 @@ task usercontrol()
 					motor[BallDispenser] = -powerForDispenser;
 
 					clearTimer(T2);
-					while(SensorValue[BallDispenserPosition] > 1070 && time1[T2] < 5000)
+					while(SensorValue[BallDispenserPosition] > 1060 && time1[T2] < 5000)
 					{
 					}
 
@@ -1469,7 +1473,6 @@ task usercontrol()
 			LauncherRange = LongMid;
 			startTask(AutoLaunchBall);
 		}
-
 		else if (btn7d == 1)
 		{
 			stopTask(AutoLaunchBall);
@@ -1478,6 +1481,15 @@ task usercontrol()
 			LauncherRange = Long;
 			startTask(AutoLaunchBall);
 		}
+		else if (btn7r == 1)
+		{
+			stopTask(AutoLaunchBall);
+			stopTask(AutoLaunchBall_Full);
+			wait1Msec(100);
+
+			startTask(AutoLaunchBall_Full);
+			//AutoLaunchBall_Full();
+		}
 		else if (btn5d == 1)
 		{
 			motor[Belt] = 0;
@@ -1485,6 +1497,7 @@ task usercontrol()
 			stopTask(LauncherDown);
 			stopTask(LaunchBall);
 			stopTask(AutoLaunchBall);
+			stopTask(AutoLaunchBall_Full);
 			startTask(LauncherStop);
 			startTask(CloseDispenser);
 		}
@@ -1499,7 +1512,7 @@ void StopOrReverseBelt()
 
 	if (power != 0)
 	{
-		startTask(StopBelt);
+		StopBelt();
 	}
 	else
 	{
@@ -1508,7 +1521,8 @@ void StopOrReverseBelt()
 	}
 }
 
-task StopBelt()
+//task StopBelt()
+void StopBelt()
 {
 	int power = 0;
 	motor[Belt] = power;
@@ -1542,7 +1556,7 @@ task OpenDispenser()
 	motor[BallDispenser] = -powerForDispenser;
 
 	clearTimer(T2);
-	while(SensorValue[BallDispenserPosition] > 1070 && time1[T2] < 5000)
+	while(SensorValue[BallDispenserPosition] > 1060 && time1[T2] < 5000)
 	{
 	}
 
@@ -1565,6 +1579,146 @@ task CloseDispenser()
 	}
 
 	motor[BallDispenser] = 0;
+}
+
+
+task AutoLaunchBall_Full()
+//void AutoLaunchBall_Full()
+{
+	int beltPower = 110;
+	beltPower = AdjustPowerUsingBatteryLevel(beltPower);
+	motor[Belt] = -beltPower;
+
+	wait1Msec(100);
+	motor[Belt] = 0;
+
+	for (int i=0;i<=2;)
+	//while(true)
+	{
+		AutoLaunchBall_Full_Helper();
+		wait1Msec(600);
+		i++;
+	}
+}
+
+void AutoLaunchBall_Full_Helper()
+{
+	// T2
+	startTask(CloseDispenser);
+
+	SensorValue[Led1] = true;
+
+
+	//clearTimer(T3);
+	//while(SensorValue[LauncherPosition] > postionToDown && time1[T3] < 1000)
+	//{
+	//}
+
+
+
+	//if ((nPgmTime - lastLaunchTime) > 5000)
+	//{
+	//	startTask(MoveBeltToReadyFirstBall);
+	//}
+	//else
+	//{
+	//	startTask(MoveBeltToReadyBall);
+	//}
+	
+	
+	int beltPower = 110;
+	beltPower = AdjustPowerUsingBatteryLevel(beltPower);
+
+	motor[Belt] = beltPower;
+	//motor[Belt
+
+	
+	startTask(OpenDispenser);
+	LauncherDown_Helper();
+
+	clearTimer(T3);
+	//bool ballReleased = false;
+
+	int ballReleased = 0;
+	int ballLoaded = 0;
+
+	while(ballReleased == 0 && ballLoaded == 0 && time1[T3] < 4000)
+	{
+		ballReleased = SensorValue[BallReleased];
+		ballLoaded = SensorValue[BallLoaded];
+	}
+
+	SensorValue[Led1] = false;
+
+	if (ballReleased > 0)
+	{
+
+		wait1Msec(200);
+
+		//ballReleased = true;
+	}
+
+
+	//if (SensorValue[BallLoaded] > 0)
+	//{
+	//	BallLoaded = true;
+	//}
+
+	motor[Belt] = 0;
+
+
+	startTask(CloseDispenser);
+
+	lastLaunchTime = nPgmTime;
+
+	if(time1[T3] >= 4000)
+	{
+		startTask(LauncherStop);
+	}
+	else if (ballReleased == 1)
+	{
+		ballLoaded = 0;
+		while(ballLoaded == 0 && time1[T3] < 4000)
+		{
+			ballLoaded = SensorValue[BallLoaded];
+		}
+	}
+
+	if (SensorValue[BallLoaded] == 1 || ballLoaded == 1)
+	{
+		//wait1Msec(450);
+		wait1Msec(300);
+
+		if (LauncherRange == Near)
+		{
+			startTask(LauncherUp_Short);
+			//startTask(LauncherUp_Mid);
+		}
+		else if (LauncherRange == Middle)
+		{
+			startTask(LauncherUp_Mid);
+		}
+		else if (LauncherRange == LongMid)
+		{
+			startTask(LauncherUp_LongMid);
+		}
+		else if (LauncherRange == Longest)
+		{
+			startTask(LauncherUp_Longest);
+		}
+		else
+		{
+			startTask(LauncherUp);
+		}
+		//wait1Msec(200);
+		//startTask(LauncherStop);
+	}
+	else
+	{
+		startTask(LauncherStop);
+	}
+
+
 }
 
 task AutoLaunchBall()
@@ -1599,12 +1753,7 @@ task AutoLaunchBall()
 
 	SensorValue[Led1] = true;
 
-	LauncherDown_Helper();
-
-	//clearTimer(T3);
-	//while(SensorValue[LauncherPosition] > postionToDown && time1[T3] < 1000)
-	//{
-	//}
+		LauncherDown_Helper();
 
 	startTask(OpenDispenser);
 
@@ -1616,6 +1765,7 @@ task AutoLaunchBall()
 	{
 		startTask(MoveBeltToReadyBall);
 	}
+
 
 	clearTimer(T3);
 	//bool ballReleased = false;
