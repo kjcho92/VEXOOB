@@ -77,8 +77,8 @@ int powerForDispenser = 80;
 // For a used rubber band
 GameMode LauncherRange = Long;
 
-int globalWaiter = 179;
-int powerToDown = 79;
+int globalWaiter = 172;
+int powerToDown = 84;
 int postionToDown = 60;
 int powerToStay = 19;
 
@@ -180,9 +180,17 @@ task autonomous()
 	else
 	{
 		//startTask(StopAutonomous);
+		long startTime = nPgmTime;
+
+
 		LaunchBall_Autonomous();
+		writeDebugStreamLine("LaunchBall) Launched Elapsed Time: %d", nPgmTime - startTime);
+
 		PickBalls();
-		wait1Msec(2300);
+		writeDebugStreamLine("LaunchBall) PickUpBalls Elapsed Time: %d", nPgmTime - startTime);
+
+		wait1Msec(1300);
+		writeDebugStreamLine("LaunchBall) Loaded Elapsed Time: %d", nPgmTime - startTime);
 
 		//LauncherRange = LongMid;
 		LaunchBall_Autonomous_Final();
@@ -332,40 +340,42 @@ task StartBelt()
 	motor[Belt] = beltPower;
 }
 
-
 void LaunchBall_Autonomous_Final()
 {
 
-	LauncherDown_Helper();
-	//startTask(LauncherDown);
-
-	// Open the dispenser
-	startTask(OpenDispenser);
-
-	// Wait until a ball loaded
-	clearTimer(T3);
-	while(SensorValue[BallLoaded] == 0 && time1[T3] < 2000)
+	while(true)
 	{
-	}
+		LauncherDown_Helper();
+		//startTask(LauncherDown);
 
-	// Close the dispenser
-	startTask(CloseDispenser);
-	//if (i == 0)
-	//{
-	//	wait1Msec(200);
-	//motor[Belt] = 0;
-	//}
-	// Timeout and move the launcher to the original position
-	if(time1[T3] >= 2000)
-	{
-		//startTask(LauncherUp);
-		startTask(LauncherStop);
-	}
-	else
-	{
-		// Ball is loaded, launch the ball
-		wait1Msec(400);
-		startTask(LauncherUp_LongMid);
+		// Open the dispenser
+		startTask(OpenDispenser);
+
+		// Wait until a ball loaded
+		clearTimer(T3);
+		while(SensorValue[BallLoaded] == 0 && time1[T3] < 2000)
+		{
+		}
+
+		// Close the dispenser
+		startTask(CloseDispenser);
+		//if (i == 0)
+		//{
+		//	wait1Msec(200);
+		//motor[Belt] = 0;
+		//}
+		// Timeout and move the launcher to the original position
+		if(time1[T3] >= 2000)
+		{
+			//startTask(LauncherUp);
+			startTask(LauncherStop);
+		}
+		else
+		{
+			// Ball is loaded, launch the ball
+			wait1Msec(400);
+			startTask(LauncherUp_LongMid);
+		}
 	}
 }
 
@@ -378,8 +388,8 @@ void LaunchBall_Autonomous()
 	while(true)
 	{
 		// Repeat for 4 times (4 preloads)
-		//if (i > 3 || j > 5)
-		if (i > 0 || j > 5)
+		if (i > 3 || j > 5)
+			//if (i > 0 || j > 5)
 		{
 			break;
 		}
@@ -1320,10 +1330,10 @@ task usercontrol()
 
 		int power3 = - vexRT[Ch3]; // forward, backward
 		int power1 = vexRT[Ch1]; // rotate
-		if (power1 > 50)
-		{
-			power1 = power1 * 90 / 100;
-		}
+		//if (power1 > 50)
+		//{
+		//	power1 = power1 * 90 / 100;
+		//}
 
 		int btn7r = vexRT[Btn7R]; // shift
 		int btn7l = vexRT[Btn7L]; // shift
@@ -1592,13 +1602,23 @@ task AutoLaunchBall_Full()
 	wait1Msec(100);
 	motor[Belt] = 0;
 
+
+	beltPower = 90;
+	beltPower = AdjustPowerUsingBatteryLevel(beltPower);
+
+	motor[Belt] = beltPower;
+
+
 	for (int i=0;i<=2;)
-	//while(true)
+		//while(true)
 	{
 		AutoLaunchBall_Full_Helper();
 		wait1Msec(600);
 		i++;
 	}
+
+	motor[Belt] = 0;
+
 }
 
 void AutoLaunchBall_Full_Helper()
@@ -1624,15 +1644,10 @@ void AutoLaunchBall_Full_Helper()
 	//{
 	//	startTask(MoveBeltToReadyBall);
 	//}
-	
-	
-	int beltPower = 110;
-	beltPower = AdjustPowerUsingBatteryLevel(beltPower);
 
-	motor[Belt] = beltPower;
 	//motor[Belt
 
-	
+
 	startTask(OpenDispenser);
 	LauncherDown_Helper();
 
@@ -1664,7 +1679,6 @@ void AutoLaunchBall_Full_Helper()
 	//	BallLoaded = true;
 	//}
 
-	motor[Belt] = 0;
 
 
 	startTask(CloseDispenser);
@@ -1753,7 +1767,7 @@ task AutoLaunchBall()
 
 	SensorValue[Led1] = true;
 
-		LauncherDown_Helper();
+	LauncherDown_Helper();
 
 	startTask(OpenDispenser);
 
