@@ -104,6 +104,9 @@ void CloseLoader_Right_Helper();
 void TravelToTheOtherSide_Straight();
 void ForBackHelper(int power);
 void StopMoving();
+void EncoderRotate(int power, int distance);
+void RotateHelper(int power);
+void MoveToTheGoal();
 
 //void ShiftHelper(30);
 
@@ -193,7 +196,7 @@ void TravelToTheOtherSide_Straight()
 	StopMoving();
 
 	ForBackHelper(-power);
-	wait1Msec(350);
+	wait1Msec(250);
 	StopMoving();
 
 	////wait1Msec(100);
@@ -235,7 +238,7 @@ task usercontrol()
 		int btn5d = vexRT[Btn5D]; // Fast Launcher
 
 		int btn6u = vexRT[Btn6U]; // Fast Launcher
-		//int btn6d = vexRT[Btn6D]; // Fast Launcher
+		int btn6d = vexRT[Btn6D]; // Fast Launcher
 
 		int btn7u = vexRT[Btn7U]; // Fast Launcher
 		int btn7d = vexRT[Btn7D]; // Slow Launcher
@@ -290,9 +293,13 @@ task usercontrol()
 			//EncoderForBack(-80, 100);
 			startTask(LaunchBall_Right);
 		}
-		if (btn6u == 1)
+		else if (btn6u == 1)
 		{
 			TravelToTheOtherSide_Straight();
+		}
+		else if (btn6d == 1)
+		{
+			MoveToTheGoal();
 		}
 
 		else if (btn5u == 1)
@@ -311,10 +318,10 @@ task usercontrol()
 
 			//wait1Msec(10);
 			startTask(LauncherStop);
-			startTask(CloseLoader);
-			startTask(CloseLoader_Right);
+			CloseLoader_Helper();
+			CloseLoader_Right_Helper();
 			StopMoving();
-						
+
 			motor[Loader1] = 0;
 			motor[Loader2] = 0;
 		}
@@ -349,11 +356,12 @@ task usercontrol()
 //task LaunchBall_ProgrammingSKills()
 void LaunchBall_ProgrammingSKills()
 {
+	int ballCounts = 3;
 	long startTime = nPgmTime;
 
-	LauncherDown_Left_Helper(32);
+	LauncherDown_Left_Helper(ballCounts);
 
-	writeDebugStreamLine("LaunchBall) Launched Elapsed Time: %d", nPgmTime - startTime);
+	writeDebugStreamLine("LaunchBall) Right Elapsed Time: %d", nPgmTime - startTime);
 	startTask(LauncherStop);
 
 	motor[Loader1] = 0;
@@ -368,17 +376,111 @@ void LaunchBall_ProgrammingSKills()
 	wait1Msec(1000);
 
 	TravelToTheOtherSide_Straight();
-	writeDebugStreamLine("LaunchBall) Moved Elapsed Time: %d", nPgmTime - startTime);
+	writeDebugStreamLine("LaunchBall) Moved-1 Elapsed Time: %d", nPgmTime - startTime);
 
 	wait1Msec(1000);
 
-	LauncherDown_Right_Helper(32);
-	
+	LauncherDown_Right_Helper(ballCounts);
+
+	writeDebugStreamLine("LaunchBall) Left Elapsed Time: %d", nPgmTime - startTime);
+
 	motor[Loader1] = 0;
 	motor[Loader2] = 0;
-	
+
 	startTask(LauncherStop);
+
+	wait1Msec(1000);
+
+	MoveToTheGoal();
+	writeDebugStreamLine("LaunchBall) Moved-2 Elapsed Time: %d", nPgmTime - startTime);
 }
+
+void MoveToTheGoal()
+{
+
+	nMotorEncoder(Wheels_Back) = 0;
+	int power = 50;
+	EncoderRotate(power, 420);
+	wait1Msec(500);
+
+	int originalPower = 70;
+	power = AdjustPowerUsingBatteryLevel(originalPower);
+
+	ForBackHelper(power);
+	wait1Msec(1000);
+	StopMoving();
+	wait1Msec(1000);
+
+	//originalPower = 90;
+	//power = AdjustPowerUsingBatteryLevel(originalPower);
+
+	ForBackHelper(power);
+	wait1Msec(1000);
+	StopMoving();
+	wait1Msec(500);
+
+	ForBackHelper(-power);
+	wait1Msec(300);
+	StopMoving();
+
+	//nMotorEncoder(Wheels_Back) = 0;
+	//power = 50;
+	//EncoderRotate(power, 30);
+	//wait1Msec(500);
+
+	ForBackHelper(power);
+	wait1Msec(500);
+
+	motor[Wheels_Back] = 0;
+	wait1Msec(1000);
+	StopMoving();
+
+
+	ForBackHelper(-power);
+	wait1Msec(300);
+	StopMoving();
+
+	//nMotorEncoder(Wheels_Back) = 0;
+	//power = 50;
+	//EncoderRotate(power, 30);
+	//wait1Msec(500);
+
+	ForBackHelper(70);
+	wait1Msec(1000);
+
+}
+
+void EncoderRotate(int power, int distance)
+{
+	int current = abs(nMotorEncoder(Wheels_Back));
+	float offset = 0;
+
+	if (power == 0) return;
+
+	//power = -power;
+	while (current + offset < distance)
+	{
+		int previous = current;
+
+		RotateHelper(power);
+
+		int current = abs(nMotorEncoder(Wheels_Back));
+
+		offset = current - previous;
+		offset = offset * 1.6;
+	}
+
+	StopMoving();
+}
+
+void RotateHelper(int power)
+{
+	int adjustedPower = AdjustPowerUsingBatteryLevel(power);
+
+	motor[Wheels_Front] = -adjustedPower;
+	motor[Wheels_Back] = -adjustedPower;
+}
+
 
 task LaunchBall()
 {//
@@ -670,7 +772,7 @@ void OpenLoader_Right_Helper()
 {//
 	//waitUntil(SensorValue[Launcher1_Started] == 1);
 	motor[Loader2] = 0;
-	
+
 	int powerLoader = 50;
 	int timeOut = 100;
 
