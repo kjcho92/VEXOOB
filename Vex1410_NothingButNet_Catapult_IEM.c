@@ -2,8 +2,8 @@
 #pragma config(Sensor, in1,    ExternalBatteryValue, sensorAnalog)
 #pragma config(Sensor, in2,    BallDispenserPosition, sensorPotentiometer)
 #pragma config(Sensor, in3,    GyroPosition,   sensorGyro)
-#pragma config(Sensor, in4,    LauncherPosition, sensorNone)
-#pragma config(Sensor, in5,    lineBallLoaded, sensorNone)
+#pragma config(Sensor, in4,    LineBallLoaded, sensorLineFollower)
+#pragma config(Sensor, in5,    LauncherPosition, sensorNone)
 #pragma config(Sensor, dgtl3,  BallLoaded,     sensorTouch)
 #pragma config(Sensor, dgtl4,  BallReleased,   sensorTouch)
 #pragma config(Sensor, dgtl5,  LauncherReady,  sensorTouch)
@@ -61,7 +61,7 @@ task displayBatteryLevelOnLCD();
 task StartBelt();
 //task StopAutonomous();
 
-// Global variables 
+// Global variables
 
 // For a new rubber band
 //int powerToDownLauncher = 76;
@@ -117,6 +117,8 @@ long lastLaunchTime = 0;
 
 int autonomousMode = 1;
 
+int lineSensorOffset = 180;
+
 //int postionToDown = 1280;
 //int postionToDown = 2900;
 
@@ -147,6 +149,7 @@ void LaunchBallFunction();
 void LauncherStop_Helper();
 void LaunchBall_Helper_Test();
 void GyroRotate(int power, int distance);
+void PickBalls_Right_Gyro();
 
 //void AutoLaunchBall_Full();
 
@@ -208,7 +211,7 @@ task autonomous()
 
 		motor[Belt] = 0;
 		//LauncherRange = LongMid;
-		//LaunchBall_Autonomous_Final();
+		LaunchBall_Autonomous_Final();
 	}
 
 }
@@ -229,7 +232,7 @@ void PickBalls()
 	}
 	else
 	{
-		PickBalls_Right();
+		PickBalls_Right_Gyro();
 	}
 }
 
@@ -317,12 +320,12 @@ void PickBalls_Right_Gyro()
 	nMotorEncoder(FrontLeft) = 0;
 
 	SensorValue[GyroPosition] = 0;
-	GyroRotate(-50, 380);
+	GyroRotate(-40, 280);
 
 }
 
 
-void PickBalls_Right()
+void PickBalls_Right_NoShoot()
 {
 	nMotorEncoder(FrontLeft) = 0;
 	EncoderRotate(40, 97);
@@ -404,6 +407,8 @@ task StartBelt()
 void LaunchBall_Autonomous_Final()
 {
 
+	int baseLineSensor = SensorValue[LineBallLoaded];
+
 	for(int i=0;i<=1;i++)
 	{
 		LauncherDown_Helper();
@@ -416,7 +421,7 @@ void LaunchBall_Autonomous_Final()
 
 		// Wait until a ball loaded
 		clearTimer(T3);
-		while(SensorValue[BallLoaded] == 0 && time1[T3] < 2000)
+		while(SensorValue[BallLoaded] == 0 && (baseLineSensor - SensorValue[LineBallLoaded]) < lineSensorOffset && time1[T3] < 2000)
 		{
 		}
 
@@ -458,6 +463,8 @@ void LaunchBall_Autonomous()
 
 	int i = 0;
 	int j = 0;
+	int baseLineSensor = SensorValue[LineBallLoaded];
+
 	while(true)
 	{
 		// Repeat for 4 times (4 preloads)
@@ -530,8 +537,9 @@ void LaunchBall_Autonomous()
 		}
 		// Wait until a ball loaded
 		clearTimer(T3);
-		while(SensorValue[BallLoaded] == 0 && time1[T3] < 3000)
-		{
+		// while(SensorValue[BallLoaded] == 0 && time1[T3] < 3000)
+		while(SensorValue[BallLoaded] == 0 && (baseLineSensor - SensorValue[LineBallLoaded]) < lineSensorOffset && time1[T3] < 3000)
+			{
 		}
 
 		// Close the dispenser
@@ -1779,7 +1787,7 @@ task AutoLaunchBall_Full()
 		//while(true)
 	{
 		AutoLaunchBall_Full_Helper();
-		wait1Msec(600);
+		wait1Msec(200);
 		i++;
 	}
 
@@ -1957,10 +1965,12 @@ task AutoLaunchBall()
 	int ballReleased = 0;
 	int ballLoaded = 0;
 
+	int baseLineSensor = SensorValue[LineBallLoaded];
+
 	while(ballReleased == 0 && ballLoaded == 0 && time1[T3] < 4000)
 	{
 		ballReleased = SensorValue[BallReleased];
-		ballLoaded = SensorValue[BallLoaded];
+		ballLoaded = SensorValue[BallLoaded] + ((baseLineSensor - SensorValue[LineBallLoaded]) > lineSensorOffset)? 1 : 0;
 	}
 
 	SensorValue[Led1] = false;
@@ -1992,11 +2002,11 @@ task AutoLaunchBall()
 		ballLoaded = 0;
 		while(ballLoaded == 0 && time1[T3] < 4000)
 		{
-			ballLoaded = SensorValue[BallLoaded];
+			ballLoaded = SensorValue[BallLoaded] + ((baseLineSensor - SensorValue[LineBallLoaded]) > lineSensorOffset)? 1 : 0;
 		}
 	}
 
-	if (SensorValue[BallLoaded] == 1 || ballLoaded == 1)
+	if (SensorValue[BallLoaded] == 1 || (baseLineSensor - SensorValue[LineBallLoaded]) > lineSensorOffset || ballLoaded == 1)
 	{
 		wait1Msec(450);
 		//wait1Msec(400);
