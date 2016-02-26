@@ -202,7 +202,7 @@ task autonomous()
 
 		LaunchBall_Autonomous();
 		writeDebugStreamLine("LaunchBall) Launched Elapsed Time: %d", nPgmTime - startTime);
-
+/*
 		PickBalls();
 		writeDebugStreamLine("LaunchBall) PickUpBalls Elapsed Time: %d", nPgmTime - startTime);
 
@@ -211,7 +211,8 @@ task autonomous()
 
 		motor[Belt] = 0;
 		//LauncherRange = LongMid;
-		LaunchBall_Autonomous_Final();
+		// LaunchBall_Autonomous_Final();
+*/	
 	}
 
 }
@@ -459,7 +460,7 @@ void LaunchBall_Autonomous_Final()
 
 void LaunchBall_Autonomous()
 {
-	writeDebugStreamLine("(autonomous started) Time: %d, %d", nPgmTime, nSysTime);
+	// writeDebugStreamLine("(autonomous started) Time: %d, %d", nPgmTime, nSysTime);
 
 	int i = 0;
 	int j = 0;
@@ -468,8 +469,8 @@ void LaunchBall_Autonomous()
 	while(true)
 	{
 		// Repeat for 4 times (4 preloads)
-		//if (i > 3 || j > 5)
-		if (i > 0 || j > 5)
+		if (i > 3 || j > 5)
+		// if (i > 0 || j > 5)
 		{
 			break;
 		}
@@ -493,7 +494,7 @@ void LaunchBall_Autonomous()
 
 		int primaryPower = AdjustPowerUsingBatteryLevel(originalPower);
 		int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower);
-		writeDebugStreamLine("LauncherUp) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
+		// writeDebugStreamLine("LauncherUp) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
 
 		motor[Launcher1] = externalPower;
 		motor[Launcher2] = externalPower;
@@ -514,7 +515,7 @@ void LaunchBall_Autonomous()
 		originalPower = powerToStay;
 		primaryPower = AdjustPowerUsingBatteryLevel(originalPower);
 		externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower);
-		writeDebugStreamLine("LauncherUp) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
+		// writeDebugStreamLine("LauncherUp) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
 
 		motor[Launcher1] = externalPower;
 		motor[Launcher2] = externalPower;
@@ -574,7 +575,7 @@ void LaunchBall_Autonomous()
 		wait1Msec(700);
 	}
 
-	writeDebugStreamLine("(autonomous stopped) Time: %d, %d", nPgmTime, nSysTime);
+	// writeDebugStreamLine("(autonomous stopped) Time: %d, %d", nPgmTime, nSysTime);
 }
 /////////////////////////////////////////////////////////////////////////////////////////
 //
