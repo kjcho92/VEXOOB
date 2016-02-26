@@ -84,11 +84,11 @@ int globalWaiter = 179;
 
 //int LaunchOnly_powerToDown = 83;
 
-int powerToDown = 82;
+int powerToDown = 79;
 int postionToDown = 60;
 int powerToStay = 19;
 
-int powerToLaunch = 84;
+int powerToLaunch = 87;
 int positionToStop = 43;
 
 int powerToLaunch_Longest = 95;
@@ -97,16 +97,16 @@ int powerToLaunch_Longest = 95;
 int powerToLaunch_Autonomous = 75;
 
 
-int powerToLaunch_LongMid = 77;
+int powerToLaunch_LongMid = 80;
 int positionToStop_LongMid = 35;
 
 //int powerToLaunch_LongMid = 78;
 //int positionToStop_LongMid = 40;
 
-int powerToLaunch_Mid = 55;
+int powerToLaunch_Mid = 60;
 int positionToStop_Mid = 22;
 
-int powerToLaunch_Short = 35;
+int powerToLaunch_Short = 37;
 int positionToStop_Short = 23;
 
 //int powerToLaunch_Mid = 80;
@@ -117,7 +117,7 @@ long lastLaunchTime = 0;
 
 int autonomousMode = 1;
 
-int lineSensorOffset = 180;
+int lineSensorOffset = 120;
 
 //int postionToDown = 1280;
 //int postionToDown = 2900;
@@ -917,7 +917,7 @@ task LauncherUp_Short()
 
 	int primaryPower = AdjustPowerUsingBatteryLevel(originalPower) * -1;
 	int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower_external) * -1;
-	writeDebugStreamLine("LauncherUp_Short) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
+	// writeDebugStreamLine("LauncherUp_Short) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
 
 	nMotorEncoder(Launcher4) = 0;
 	clearTimer(T1);
@@ -1110,7 +1110,7 @@ void LauncherDown_Helper()
 	int originalPower = powerToDown;
 	int primaryPower = AdjustPowerUsingBatteryLevel(originalPower);
 	int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower);
-	writeDebugStreamLine("LauncherDown_Helper) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
+	// writeDebugStreamLine("LauncherDown_Helper) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
 
 	motor[Launcher1] = externalPower;
 	motor[Launcher2] = externalPower;
@@ -1122,7 +1122,7 @@ void LauncherDown_Helper()
 	originalPower = powerToStay;
 	primaryPower = AdjustPowerUsingBatteryLevel(originalPower);
 	externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower);
-	writeDebugStreamLine("LauncherDown_Helper) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
+	// writeDebugStreamLine("LauncherDown_Helper) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
 
 	motor[Launcher1] = externalPower;
 	motor[Launcher2] = externalPower;
@@ -1765,10 +1765,11 @@ task CloseDispenser()
 	motor[BallDispenser] = 0;
 }
 
-
 task AutoLaunchBall_Full()
 //void AutoLaunchBall_Full()
 {
+	long startTime = nPgmTime;
+
 	int beltPower = 110;
 	beltPower = AdjustPowerUsingBatteryLevel(beltPower);
 	motor[Belt] = -beltPower;
@@ -1793,6 +1794,129 @@ task AutoLaunchBall_Full()
 
 	motor[Belt] = 0;
 
+	writeDebugStreamLine("AutoLaunchBall_Full) Launched Elapsed Time: %d", nPgmTime - startTime);
+}
+
+void AutoLaunchBall_Full_Helper()
+{
+	// T2
+	SensorValue[Led1] = true;
+
+	LauncherDown_Helper();
+
+	startTask(OpenDispenser);
+
+	clearTimer(T3);
+	//bool ballReleased = false;
+
+	int ballReleased = 0;
+	int ballLoaded = 0;
+
+	int baseLineSensor = SensorValue[LineBallLoaded];
+
+	while(ballReleased == 0 && ballLoaded == 0 && time1[T3] < 4000)
+	{
+		ballReleased = SensorValue[BallReleased];
+		// ballLoaded = SensorValue[BallLoaded];
+		ballLoaded = SensorValue[BallLoaded] + ((baseLineSensor - SensorValue[LineBallLoaded]) > lineSensorOffset)? 1 : 0;
+	}
+
+	SensorValue[Led1] = false;
+
+	if (ballReleased > 0)
+	{
+
+		wait1Msec(200);
+
+		//ballReleased = true;
+	}
+
+
+	startTask(CloseDispenser);
+
+	lastLaunchTime = nPgmTime;
+
+	if(time1[T3] >= 4000)
+	{
+		startTask(LauncherStop);
+	}
+	else if (ballReleased == 1)
+	{
+		ballLoaded = 0;
+		while(ballLoaded == 0 && time1[T3] < 4000)
+		{
+			// ballLoaded = SensorValue[BallLoaded];
+			ballLoaded = SensorValue[BallLoaded] + ((baseLineSensor - SensorValue[LineBallLoaded]) > lineSensorOffset)? 1 : 0;
+		}
+	}
+
+	// if (SensorValue[BallLoaded] == 1 || ballLoaded == 1)
+	if (SensorValue[BallLoaded] == 1 || (baseLineSensor - SensorValue[LineBallLoaded]) > lineSensorOffset || ballLoaded == 1)
+		{
+		//wait1Msec(450);
+		wait1Msec(300);
+
+		if (LauncherRange == Near)
+		{
+			startTask(LauncherUp_Short);
+			//startTask(LauncherUp_Mid);
+		}
+		else if (LauncherRange == Middle)
+		{
+			startTask(LauncherUp_Mid);
+		}
+		else if (LauncherRange == LongMid)
+		{
+			startTask(LauncherUp_LongMid);
+		}
+		//else if (LauncherRange == Longest)
+		//{
+		//	startTask(LauncherUp_Longest);
+		//}
+		else
+		{
+			startTask(LauncherUp);
+		}
+		//wait1Msec(200);
+		//startTask(LauncherStop);
+	}
+	else
+	{
+		startTask(LauncherStop);
+	}
+}
+
+/*
+task AutoLaunchBall_Full()
+//void AutoLaunchBall_Full()
+{
+	long startTime = nPgmTime;
+
+	int beltPower = 110;
+	beltPower = AdjustPowerUsingBatteryLevel(beltPower);
+	motor[Belt] = -beltPower;
+
+	wait1Msec(100);
+	motor[Belt] = 0;
+
+
+	beltPower = 90;
+	beltPower = AdjustPowerUsingBatteryLevel(beltPower);
+
+	motor[Belt] = beltPower;
+
+
+	for (int i=0;i<=2;)
+		//while(true)
+	{
+		AutoLaunchBall_Full_Helper();
+		wait1Msec(200);
+		i++;
+	}
+
+	motor[Belt] = 0;
+
+	writeDebugStreamLine("AutoLaunchBall_Full) Launched Elapsed Time: %d", nPgmTime - startTime);
 }
 
 void AutoLaunchBall_Full_Helper()
@@ -1831,10 +1955,13 @@ void AutoLaunchBall_Full_Helper()
 	int ballReleased = 0;
 	int ballLoaded = 0;
 
+	int baseLineSensor = SensorValue[LineBallLoaded];
+
 	while(ballReleased == 0 && ballLoaded == 0 && time1[T3] < 4000)
 	{
 		ballReleased = SensorValue[BallReleased];
-		ballLoaded = SensorValue[BallLoaded];
+		// ballLoaded = SensorValue[BallLoaded];
+		ballLoaded = SensorValue[BallLoaded] + ((baseLineSensor - SensorValue[LineBallLoaded]) > lineSensorOffset)? 1 : 0;
 	}
 
 	SensorValue[Led1] = false;
@@ -1868,12 +1995,14 @@ void AutoLaunchBall_Full_Helper()
 		ballLoaded = 0;
 		while(ballLoaded == 0 && time1[T3] < 4000)
 		{
-			ballLoaded = SensorValue[BallLoaded];
+			// ballLoaded = SensorValue[BallLoaded];
+			ballLoaded = SensorValue[BallLoaded] + ((baseLineSensor - SensorValue[LineBallLoaded]) > lineSensorOffset)? 1 : 0;
 		}
 	}
 
-	if (SensorValue[BallLoaded] == 1 || ballLoaded == 1)
-	{
+	// if (SensorValue[BallLoaded] == 1 || ballLoaded == 1)
+	if (SensorValue[BallLoaded] == 1 || (baseLineSensor - SensorValue[LineBallLoaded]) > lineSensorOffset || ballLoaded == 1)
+		{
 		//wait1Msec(450);
 		wait1Msec(300);
 
@@ -1905,9 +2034,8 @@ void AutoLaunchBall_Full_Helper()
 	{
 		startTask(LauncherStop);
 	}
-
-
 }
+*/
 
 task AutoLaunchBall()
 {
