@@ -74,6 +74,7 @@ enum GameMode{
 	Middle = 2,
 	Near = 3,
 	Longest = 4,
+	Autonomous = 5,
 };
 
 int powerForDispenser = 80;
@@ -84,17 +85,17 @@ int globalWaiter = 179;
 
 //int LaunchOnly_powerToDown = 83;
 
-int powerToDown = 79;
+int powerToDown = 80;
 int postionToDown = 60;
 int powerToStay = 19;
 
-int powerToLaunch = 87;
+int powerToLaunch = 88;
 int positionToStop = 43;
 
 int powerToLaunch_Longest = 95;
 //int positionToStop_Longest = 1390;
 
-int powerToLaunch_Autonomous = 75;
+int powerToLaunch_Autonomous = 79;
 
 
 int powerToLaunch_LongMid = 80;
@@ -150,6 +151,7 @@ void LauncherStop_Helper();
 void LaunchBall_Helper_Test();
 void GyroRotate(int power, int distance);
 void PickBalls_Right_Gyro();
+void PickBalls_Left_Gyro();
 
 //void AutoLaunchBall_Full();
 
@@ -202,19 +204,21 @@ task autonomous()
 
 		LaunchBall_Autonomous();
 		writeDebugStreamLine("LaunchBall) Launched Elapsed Time: %d", nPgmTime - startTime);
-/*
+
 		PickBalls();
 		writeDebugStreamLine("LaunchBall) PickUpBalls Elapsed Time: %d", nPgmTime - startTime);
 
 		wait1Msec(1800);
 		writeDebugStreamLine("LaunchBall) Loaded Elapsed Time: %d", nPgmTime - startTime);
 
-		motor[Belt] = 0;
+		int beltPower = 90;
+		beltPower = AdjustPowerUsingBatteryLevel(beltPower);
+		// motor[Belt] = 0;
 		//LauncherRange = LongMid;
-		// LaunchBall_Autonomous_Final();
-*/	
-	}
+		LaunchBall_Autonomous_Final();
+		writeDebugStreamLine("LaunchBall) Launched Final Elapsed Time: %d", nPgmTime - startTime);
 
+	}
 }
 
 //task StopAutonomous
@@ -229,13 +233,32 @@ void PickBalls()
 {
 	if (autonomousMode == 1)
 	{
-		PickBalls_Left();
+		PickBalls_Left_Gyro();
 	}
 	else
 	{
 		PickBalls_Right_Gyro();
 	}
 }
+
+void PickBalls_Left_Gyro()
+{
+	nMotorEncoder(FrontLeft) = 0;
+	EncoderRotate(-40, 40);
+
+	wait1Msec(100);
+
+	startTask(StartBelt);
+
+	nMotorEncoder(FrontLeft) = 0;
+	EncoderForBack(30, 1100);
+
+	wait1Msec(100);
+
+	SensorValue[GyroPosition] = 0;
+	GyroRotate(60, 88); /*90?*/
+}
+
 
 void PickBalls_Left()
 {
@@ -321,7 +344,7 @@ void PickBalls_Right_Gyro()
 	nMotorEncoder(FrontLeft) = 0;
 
 	SensorValue[GyroPosition] = 0;
-	GyroRotate(-40, 280);
+	GyroRotate(-60, 280);
 
 }
 
@@ -407,6 +430,20 @@ task StartBelt()
 
 void LaunchBall_Autonomous_Final()
 {
+	LauncherRange = Autonomous;
+	for (int i=0;i<=1;)
+	// for (int i=0;i<=3;)
+	{
+		AutoLaunchBall_Full_Helper();
+		wait1Msec(200);
+		i++;
+	}
+
+	motor[Belt] = 0;
+}
+
+void LaunchBall_Autonomous_Final_Old()
+{
 
 	int baseLineSensor = SensorValue[LineBallLoaded];
 
@@ -459,6 +496,38 @@ void LaunchBall_Autonomous_Final()
 }
 
 void LaunchBall_Autonomous()
+{
+	// long startTime = nPgmTime;
+
+	int beltPower = 110;
+	beltPower = AdjustPowerUsingBatteryLevel(beltPower);
+	motor[Belt] = -beltPower;
+
+	wait1Msec(100);
+	motor[Belt] = 0;
+
+
+	beltPower = 80;
+	beltPower = AdjustPowerUsingBatteryLevel(beltPower);
+
+	motor[Belt] = beltPower;
+
+
+	for (int i=0;i<=0;)
+	// for (int i=0;i<=3;)
+	{
+		AutoLaunchBall_Full_Helper();
+		wait1Msec(200);
+		i++;
+	}
+
+	motor[Belt] = 0;
+
+	// writeDebugStreamLine("AutoLaunchBall_Full) Launched Elapsed Time: %d", nPgmTime - startTime);
+
+}
+
+void LaunchBall_Autonomous_old()
 {
 	// writeDebugStreamLine("(autonomous started) Time: %d, %d", nPgmTime, nSysTime);
 
@@ -1869,6 +1938,10 @@ void AutoLaunchBall_Full_Helper()
 		else if (LauncherRange == LongMid)
 		{
 			startTask(LauncherUp_LongMid);
+		}
+		else if (LauncherRange == Autonomous)
+		{
+			startTask(LauncherUp_Autonomous);
 		}
 		//else if (LauncherRange == Longest)
 		//{
