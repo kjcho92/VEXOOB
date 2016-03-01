@@ -43,8 +43,8 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 
 task LauncherUp();
-task LauncherUp_LongMid();
-task LauncherUp_Autonomous();
+//task LauncherUp_LongMid();
+//task LauncherUp_Autonomous();
 task LauncherStop();
 task LauncherDown();
 task LaunchBall();
@@ -75,6 +75,7 @@ enum GameMode{
 	Near = 3,
 	Longest = 4,
 	Autonomous = 5,
+	ProgrammingSkill = 6
 };
 
 int powerForDispenser = 80;
@@ -85,18 +86,19 @@ int globalWaiter = 179;
 
 //int LaunchOnly_powerToDown = 83;
 
-int powerToDown = 80;
+int powerToDown = 81;
 int postionToDown = 60;
 int powerToStay = 19;
 
-int powerToLaunch = 88;
+int powerToLaunch = 87;
 int positionToStop = 43;
 
-int powerToLaunch_Longest = 95;
+//int powerToLaunch_Longest = 95;
 //int positionToStop_Longest = 1390;
 
-int powerToLaunch_Autonomous = 79;
+int powerToLaunch_Autonomous = 77;
 
+int powerToLaunch_ProgrammingSkill = 75;
 
 int powerToLaunch_LongMid = 80;
 int positionToStop_LongMid = 35;
@@ -442,6 +444,7 @@ void LaunchBall_Autonomous_Final()
 	motor[Belt] = 0;
 }
 
+/*
 void LaunchBall_Autonomous_Final_Old()
 {
 
@@ -494,6 +497,7 @@ void LaunchBall_Autonomous_Final_Old()
 
 	motor[Belt] = 0;
 }
+*/
 
 void LaunchBall_Autonomous()
 {
@@ -871,6 +875,96 @@ void LauncherUp_Helper_IEM()
 //	//motor[Launcher4] = power1;
 //}
 
+task LauncherUp_ProgrammingSkill()
+{ // Timer
+	//startTask(LauncherStop);
+	LauncherStop_Helper();
+
+	int originalPower = powerToLaunch_ProgrammingSkill;
+	int originalPower_external = powerToLaunch_ProgrammingSkill;
+
+	//int local_positionToStop = positionToStop;
+
+	int primaryPower = AdjustPowerUsingBatteryLevel(originalPower) * -1;
+	int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower_external) * -1;
+	// writeDebugStreamLine("LauncherUp) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
+
+	nMotorEncoder(Launcher4) = 0;
+	clearTimer(T1);
+
+	motor[Launcher1] = externalPower;
+	motor[Launcher2] = externalPower;
+	motor[Launcher3] = primaryPower;
+	motor[Launcher4] = primaryPower;
+
+	clearTimer(T1);
+	while(time1[T1] < 80)
+	{
+	}
+	//writeDebugStreamLine("LauncherUp) launcherPosition #1: %d", abs(nMotorEncoder(Launcher4)));
+
+	//while(abs(nMotorEncoder(Launcher4)) < local_positionToStop && time1[T1] < 1000)
+	//{
+	//}
+
+	// writeDebugStreamLine("LauncherUp) launcherPosition #1: %d", abs(nMotorEncoder(Launcher4)));
+
+	//int extPower = 20;
+	//motor[Launcher1] = extPower;
+	//motor[Launcher2] = extPower;
+	//motor[Launcher3] = extPower;
+	//motor[Launcher4] = extPower;
+	//wait1Msec(70);
+
+	//startTask(LauncherStop);
+	LauncherStop_Helper();
+	// writeDebugStreamLine("LauncherUp) launcherPosition #2: %d", abs(nMotorEncoder(Launcher4)));
+
+}
+
+task LauncherUp_LongMid_Global()
+{
+	startTask(LauncherStop);
+
+	int originalPower = powerToLaunch_LongMid;
+	int originalPower_external = powerToLaunch_LongMid;
+	int local_positionToStop = positionToStop_LongMid;
+
+	if (LauncherRange == Autonomous)
+	{
+		originalPower = powerToLaunch_Autonomous;
+		originalPower_external = powerToLaunch_Autonomous;
+		local_positionToStop = positionToStop_LongMid;
+
+	}
+
+	int primaryPower = AdjustPowerUsingBatteryLevel(originalPower) * -1;
+	int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower_external) * -1;
+	writeDebugStreamLine("LauncherUp_Autonomous) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
+
+	nMotorEncoder(Launcher4) = 0;
+	clearTimer(T1);
+
+	motor[Launcher1] = externalPower;
+	motor[Launcher2] = externalPower;
+	motor[Launcher3] = primaryPower;
+	motor[Launcher4] = primaryPower;
+
+	while(abs(nMotorEncoder(Launcher4)) < local_positionToStop && time1[T1] < 1000)
+	{
+	}
+
+	//int extPower = 20;
+	//motor[Launcher1] = extPower;
+	//motor[Launcher2] = extPower;
+	//motor[Launcher3] = extPower;
+	//motor[Launcher4] = extPower;
+	//wait1Msec(70);
+
+	startTask(LauncherStop);
+}
+
+/*
 task LauncherUp_Autonomous()
 {
 		startTask(LauncherStop);
@@ -940,7 +1034,50 @@ task LauncherUp_LongMid()
 
 	startTask(LauncherStop);
 }
+*/
 
+task LauncherUp_Mid_Global()
+{
+	startTask(LauncherStop);
+
+	int originalPower = powerToLaunch_Short;
+	int originalPower_external = powerToLaunch_Short;
+	int local_positionToStop = positionToStop_Short;
+
+	if (LauncherRange == Middle)
+	{
+		originalPower = powerToLaunch_Mid;
+		originalPower_external = powerToLaunch_Mid;
+		local_positionToStop = positionToStop_Mid;
+	}
+
+	int primaryPower = AdjustPowerUsingBatteryLevel(originalPower) * -1;
+	int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower_external) * -1;
+	// writeDebugStreamLine("LauncherUp_Mid_Global) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
+
+	nMotorEncoder(Launcher4) = 0;
+	clearTimer(T1);
+
+	motor[Launcher1] = externalPower;
+	motor[Launcher2] = externalPower;
+	motor[Launcher3] = primaryPower;
+	motor[Launcher4] = primaryPower;
+
+	while(abs(nMotorEncoder(Launcher4)) < local_positionToStop && time1[T1] < 500)
+	{
+	}
+
+	int extPower = 20;
+	motor[Launcher1] = extPower;
+	motor[Launcher2] = extPower;
+	motor[Launcher3] = extPower;
+	motor[Launcher4] = extPower;
+	wait1Msec(70);
+
+	startTask(LauncherStop);
+}
+
+/*
 task LauncherUp_Mid()
 {
 	startTask(LauncherStop);
@@ -1016,7 +1153,7 @@ task LauncherUp_Short()
 
 	startTask(LauncherStop);
 }
-
+*/
 task LauncherStop()
 {
 	LauncherStop_Helper();
@@ -1253,7 +1390,7 @@ void LaunchBall_Helper()
 {
 	//LauncherStop_Helper();
 
-	SensorValue[Led1] = true;
+	// SensorValue[Led1] = true;
 
 	//LaunchOnly_LauncherDown_Helper();
 	LauncherDown_Helper();
@@ -1264,7 +1401,7 @@ void LaunchBall_Helper()
 	{
 	}
 
-	SensorValue[Led1] = false;
+	// SensorValue[Led1] = false;
 
 	//stopTask(LauncherDown);
 
@@ -1273,16 +1410,14 @@ void LaunchBall_Helper()
 		//wait1Msec(450);
 		wait1Msec(300);
 
-		startTask(LauncherUp);
-		//
-		//if (LauncherRange == LongMid)
-		//{
-		//	startTask(LauncherUp_LongMid);
-		//}
-		//else
-		//{
-		//	startTask(LauncherUp);
-		//}
+		if (LauncherRange == ProgrammingSkill)
+		{
+			startTask(LauncherUp_ProgrammingSkill);
+		}
+		else
+		{
+			startTask(LauncherUp);
+		}
 
 		//if (LauncherRange == Near)
 		//{
@@ -1320,6 +1455,36 @@ task LaunchBall_ProgrammingSkill()
 }
 
 void LaunchBall_ProgrammingSkill_Helper()
+{ // Skills
+
+	// long startTime = nPgmTime;
+	LauncherRange = ProgrammingSkill;
+
+	//int i = 0;
+	for (int i=0;i<64;)
+	// while(true)
+	{
+		//{
+		LaunchBall_Helper();
+		i++;
+
+		if (i == 32)
+		// if (i == 32)
+		{
+			//LauncherRange = Long;
+			wait1Msec(100);
+
+			long startTime = nPgmTime;
+			TravelToTheOtherSide();
+			writeDebugStreamLine("ProgrammingSkill) Moved Elapsed Time: %d", nPgmTime - startTime);
+
+			wait1Msec(300); // Skill
+
+		}
+	}
+}
+
+void LaunchBall_ProgrammingSkill_Helper_Old()
 { // Skills
 	LauncherRange = Long;
 
@@ -1477,7 +1642,33 @@ void TravelToTheOtherSide_Straight()
 
 }
 
+
 void TravelToTheOtherSide()
+{
+	SensorValue[GyroPosition] = 0;
+	GyroRotate(70, 1000);
+
+	wait1Msec(300);
+
+	nMotorEncoder(FrontLeft) = 0;
+	EncoderForBack(-80, 1300);
+
+	EncoderForBack(-40, 1520);
+
+	wait1Msec(500);
+
+	SensorValue[GyroPosition] = 0;
+	GyroRotate(-60, 1520);
+
+	wait1Msec(300);
+
+	ForBackHelper(-70);
+
+	wait1Msec(520);
+	StopMoving();
+}
+
+void TravelToTheOtherSide_Old()
 {
 
 	// Turn right to the center
@@ -1601,18 +1792,29 @@ task usercontrol()
 
 				wait1Msec(10);
 
-				if (LauncherRange == Near)
+
+				if (LauncherRange == Near || LauncherRange == Middle)
+				{
+					startTask(LauncherUp_Mid_Global);
+					//startTask(LauncherUp_Mid);
+				}
+				else if (LauncherRange == LongMid)
+				{
+					startTask(LauncherUp_LongMid_Global);
+				}
+
+				/*if (LauncherRange == Near)
 				{
 					startTask(LauncherUp_Short);
 				}
 				else if (LauncherRange == Middle)
 				{
 					startTask(LauncherUp_Mid);
-				}
-				else if (LauncherRange == LongMid)
+				}*/
+				/*else if (LauncherRange == LongMid)
 				{
 					startTask(LauncherUp_LongMid);
-				}
+				}*/
 				//else if (LauncherRange == Longest)
 				//{
 				//	startTask(LauncherUp_Longest);
@@ -1625,22 +1827,71 @@ task usercontrol()
 		}
 		else if (btn8d == 1)
 		{
-			//stopTask(AutoLaunchBall);
-			//wait1Msec(100);
+			// startTask(LaunchBall_ProgrammingSkill);
+			// LauncherRange = ProgrammingSkill;
+			// stopTask(LaunchBall);
+			// startTask(LaunchBall);
 
-			//LauncherRange = Longest;
-			//startTask(AutoLaunchBall);
-
-			//wait1Msec(100);
-
-			LauncherRange = Near;
+			LaunchBall_ProgrammingSkill_Helper();
+/*			LauncherRange = Near;
 
 			stopTask(LauncherUp);
 			startTask(LauncherDown);
+*/
+			// long startTime = nPgmTime;
+
+/*
+			SensorValue[GyroPosition] = 0;
+			GyroRotate(70, 1000);
+
+			wait1Msec(300);
+
+			nMotorEncoder(FrontLeft) = 0;
+			EncoderForBack(-80, 1300);
+
+			EncoderForBack(-40, 1520);
+
+			wait1Msec(500);
+
+			SensorValue[GyroPosition] = 0;
+			GyroRotate(-60, 1600);
+
+			wait1Msec(300);
+
+			ForBackHelper(-70);
+
+			wait1Msec(450);*/
+
+
+
+			// wait1Msec(500);
+
+			// ForBackHelper(-50);
+
+			// wait1Msec(400);
+
+
+			// ForBackHelper(-10);
+
+
+			// wait1Msec(500);
+
+			// SensorValue[GyroPosition] = 0;
+			// GyroRotate(-70, 210);
+
+
+			// writeDebugStreamLine("ProgrammingSkill) Moved Elapsed Time: %d", nPgmTime - startTime);
+
+
+			// SensorValue[GyroPosition] = 0;
+			// GyroRotate(-60, 650);
+
+
 
 		}
 		else if (btn8l == 1)
 		{
+			// LauncherRange = ProgrammingSkill;
 			stopTask(LaunchBall);
 
 			startTask(LaunchBall);
@@ -1752,6 +2003,7 @@ task usercontrol()
 			stopTask(LaunchBall);
 			stopTask(AutoLaunchBall);
 			stopTask(AutoLaunchBall_Full);
+			stopTask(LaunchBall_ProgrammingSkill);
 			startTask(LauncherStop);
 			startTask(CloseDispenser);
 		}
@@ -1849,13 +2101,19 @@ task AutoLaunchBall_Full()
 
 
 	beltPower = 90;
+
+	// if (LauncherRange == ProgrammingSkill)
+	// {
+	// 	beltPower = 100;
+	// }
+
 	beltPower = AdjustPowerUsingBatteryLevel(beltPower);
 
 	motor[Belt] = beltPower;
 
 
 	for (int i=0;i<=2;)
-		//while(true)
+	//while(true)
 	{
 		AutoLaunchBall_Full_Helper();
 		wait1Msec(200);
@@ -1926,7 +2184,29 @@ void AutoLaunchBall_Full_Helper()
 		//wait1Msec(450);
 		wait1Msec(300);
 
-		if (LauncherRange == Near)
+
+		if (LauncherRange == Near || LauncherRange == Middle)
+		{
+			startTask(LauncherUp_Mid_Global);
+			//startTask(LauncherUp_Mid);
+		}
+		else if (LauncherRange == LongMid || LauncherRange == Autonomous)
+		{
+			startTask(LauncherUp_LongMid_Global);
+		}
+		else
+		{
+			startTask(LauncherUp);
+		}
+
+
+		// else if (LauncherRange == ProgrammingSkill)
+		// {
+		// 	startTask(LauncherUp_ProgrammingSkill);
+		// }
+
+
+		/*if (LauncherRange == Near)
 		{
 			startTask(LauncherUp_Short);
 			//startTask(LauncherUp_Mid);
@@ -1934,23 +2214,19 @@ void AutoLaunchBall_Full_Helper()
 		else if (LauncherRange == Middle)
 		{
 			startTask(LauncherUp_Mid);
-		}
-		else if (LauncherRange == LongMid)
+		}*/
+		/*else if (LauncherRange == LongMid)
 		{
 			startTask(LauncherUp_LongMid);
 		}
 		else if (LauncherRange == Autonomous)
 		{
 			startTask(LauncherUp_Autonomous);
-		}
+		}*/
 		//else if (LauncherRange == Longest)
 		//{
 		//	startTask(LauncherUp_Longest);
 		//}
-		else
-		{
-			startTask(LauncherUp);
-		}
 		//wait1Msec(200);
 		//startTask(LauncherStop);
 	}
@@ -2213,27 +2489,32 @@ task AutoLaunchBall()
 		wait1Msec(450);
 		//wait1Msec(400);
 
-		if (LauncherRange == Near)
+		if (LauncherRange == Near || LauncherRange == Middle)
 		{
-			startTask(LauncherUp_Short);
+			startTask(LauncherUp_Mid_Global);
 			//startTask(LauncherUp_Mid);
 		}
-		else if (LauncherRange == Middle)
+		else if (LauncherRange == LongMid || LauncherRange == Autonomous)
 		{
-			startTask(LauncherUp_Mid);
+			startTask(LauncherUp_LongMid_Global);
 		}
-		else if (LauncherRange == LongMid)
-		{
-			startTask(LauncherUp_LongMid);
-		}
-		//else if (LauncherRange == Longest)
-		//{
-		//	startTask(LauncherUp_Longest);
-		//}
 		else
 		{
 			startTask(LauncherUp);
 		}
+		/*else if (LauncherRange == Middle)
+		{
+			startTask(LauncherUp_Mid);
+		}*/
+		/*else if (LauncherRange == LongMid)
+		{
+			startTask(LauncherUp_LongMid);
+		}*/
+		//else if (LauncherRange == Longest)
+		//{
+		//	startTask(LauncherUp_Longest);
+		//}
+
 		//wait1Msec(200);
 		//startTask(LauncherStop);
 	}
