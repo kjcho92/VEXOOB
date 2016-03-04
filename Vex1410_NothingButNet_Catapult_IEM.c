@@ -57,7 +57,7 @@ task MoveBeltToReadyBall();
 task MoveBeltToReadyFirstBall();
 task AutoLaunchBall();
 task AutoLaunchBall_Full();
-task displayBatteryLevelOnLCD();
+//task displayBatteryLevelOnLCD();
 task StartBelt();
 //task StopAutonomous();
 
@@ -89,7 +89,7 @@ int powerToDown = 82;
 int postionToDown = 65;
 int powerToStay = 19;
 
-int powerToLaunch = 87;
+int powerToLaunch = 88;
 int positionToStop = 43;
 
 //int powerToLaunch_Longest = 95;
@@ -127,6 +127,8 @@ int lineSensorOffset = 120;
 
 // Position to break launcher
 
+void displayBatteryLevelOnLCD(int autonomousModeValue);
+void DisplayAutonomousMode(int autonomousModeValue);
 void TravelToTheOtherSide();
 //void ForBack(int originalPower, int distance);
 void StopMoving();
@@ -145,7 +147,6 @@ void ForBackHelper(int power);
 void LaunchBall_ProgrammingSkill_Helper();
 void LaunchBall_Autonomous_Final();
 void PickBalls_Left();
-void PickBalls_Right();
 void AutoLaunchBall_Full_Helper();
 void StopBelt();
 void LaunchBallFunction();
@@ -154,6 +155,9 @@ bool LaunchBall_Helper_Test(int i);
 void GyroRotate(int power, int distance);
 void PickBalls_Right_Gyro();
 void PickBalls_Left_Gyro();
+void PushFirstBalls();
+void PushFirstBalls_Left_Gyro();
+void PushFirstBalls_Right_Gyro();
 
 //void AutoLaunchBall_Full();
 
@@ -190,15 +194,15 @@ task autonomous()
 	//}
 	//else
 
-	if (SensorValue[Jumper1] == 0)
+	if (autonomousMode == 6)
 	{
 		startTask(StartBelt);
 	}
-	else if (autonomousMode == 4)
+	else if (autonomousMode == 5)
 	{
 		startTask(LaunchBall_ProgrammingSkill);
 	}
-	else
+	else if (autonomousMode == 1 || autonomousMode == 3)
 	{
 		//startTask(StopAutonomous);
 		long startTime = nPgmTime;
@@ -219,6 +223,28 @@ task autonomous()
 		//LauncherRange = LongMid;
 		LaunchBall_Autonomous_Final();
 		writeDebugStreamLine("LaunchBall) Launched Final Elapsed Time: %d", nPgmTime - startTime);
+	}
+	else if (autonomousMode == 2 || autonomousMode == 4)
+	{
+		//startTask(StopAutonomous);
+		long startTime = nPgmTime;
+
+
+		LaunchBall_Autonomous();
+		writeDebugStreamLine("LaunchBall) Launched Elapsed Time: %d", nPgmTime - startTime);
+
+		PushFirstBalls();
+		writeDebugStreamLine("LaunchBall) PushFirstBalls Elapsed Time: %d", nPgmTime - startTime);
+
+		// wait1Msec(1800);
+		// writeDebugStreamLine("LaunchBall) Loaded Elapsed Time: %d", nPgmTime - startTime);
+
+		// int beltPower = 90;
+		// beltPower = AdjustPowerUsingBatteryLevel(beltPower);
+		// motor[Belt] = 0;
+		//LauncherRange = LongMid;
+		// LaunchBall_Autonomous_Final();
+		// writeDebugStreamLine("LaunchBall) Launched Final Elapsed Time: %d", nPgmTime - startTime);
 
 	}
 }
@@ -230,6 +256,132 @@ task autonomous()
 //	stopTask(autonomous);
 //}
 
+void PushFirstBalls()
+{
+	if (autonomousMode == 2)
+	{
+		PushFirstBalls_Left_Gyro();
+	}
+	else
+	{
+		PushFirstBalls_Right_Gyro();
+	}
+}
+
+void PushFirstBalls_Left_Gyro()
+{
+
+
+	SensorValue[GyroPosition] = 0;
+	GyroRotate(50, 80);
+
+	wait1Msec(100);
+
+	nMotorEncoder(FrontLeft) = 0;
+	EncoderForBack(80, 1100);
+
+	wait1Msec(500);
+
+	SensorValue[GyroPosition] = 0;
+	GyroRotate(80, 70);
+
+	wait1Msec(500);
+
+	// Push back the first balls
+	nMotorEncoder(FrontLeft) = 0;
+	EncoderForBack(-80, 300);
+
+	wait1Msec(500);
+
+	SensorValue[GyroPosition] = 0;
+	GyroRotate(80, 100);
+
+	wait1Msec(500);
+
+	nMotorEncoder(FrontLeft) = 0;
+	EncoderForBack(50, 550);
+
+	wait1Msec(500);
+
+	SensorValue[GyroPosition] = 0;
+	GyroRotate(80, 800);
+
+	wait1Msec(500);
+
+	startTask(StartBelt);
+
+	nMotorEncoder(FrontLeft) = 0;
+	EncoderForBack(60, 420);
+
+	wait1Msec(1000);
+
+	nMotorEncoder(FrontLeft) = 0;
+	EncoderForBack(-50, 50);
+
+	wait1Msec(500);
+
+	SensorValue[GyroPosition] = 0;
+	GyroRotate(80, 70);
+
+	/*
+	SensorValue[GyroPosition] = 0;
+	GyroRotate(60, 88);
+	*/
+}
+
+void PushFirstBalls_Right_Gyro()
+{
+	/*SensorValue[GyroPosition] = 0;
+	GyroRotate(-48, 80);
+
+	wait1Msec(100);*/
+
+	nMotorEncoder(FrontLeft) = 0;
+	EncoderForBack(80, 800);
+
+	wait1Msec(500);
+
+	SensorValue[GyroPosition] = 0;
+	GyroRotate(-80, 70);
+
+	wait1Msec(500);
+
+	// Push back the first balls
+	nMotorEncoder(FrontLeft) = 0;
+	EncoderForBack(-80, 280);
+
+	wait1Msec(500);
+
+	SensorValue[GyroPosition] = 0;
+	GyroRotate(-50, 100);
+
+	wait1Msec(500);
+
+	nMotorEncoder(FrontLeft) = 0;
+	EncoderForBack(50, 600);
+
+	wait1Msec(500);
+
+	SensorValue[GyroPosition] = 0;
+	GyroRotate(-80, 800);
+
+	wait1Msec(500);
+
+	startTask(StartBelt);
+
+	nMotorEncoder(FrontLeft) = 0;
+	EncoderForBack(60, 500);
+
+	wait1Msec(1000);
+
+	/*nMotorEncoder(FrontLeft) = 0;
+	EncoderForBack(-50, 50);
+
+	wait1Msec(500);*/
+
+	SensorValue[GyroPosition] = 0;
+	GyroRotate(-80, 150);
+}
 
 void PickBalls()
 {
@@ -347,7 +499,6 @@ void PickBalls_Right_Gyro()
 
 	SensorValue[GyroPosition] = 0;
 	GyroRotate(-60, 280);
-
 }
 
 
@@ -517,8 +668,8 @@ void LaunchBall_Autonomous()
 	motor[Belt] = beltPower;
 
 
-	for (int i=0;i<=0;)
-		// for (int i=0;i<=3;)
+	// for (int i=0;i<=0;)
+	for (int i=0;i<=3;)
 	{
 		AutoLaunchBall_Full_Helper();
 		wait1Msec(200);
@@ -658,7 +809,143 @@ void LaunchBall_Autonomous_old()
 // You must modify the code to add your own robot specific commands here.
 //
 /////////////////////////////////////////////////////////////////////////////////////////
-task displayBatteryLevelOnLCD()
+
+// task displayBatteryLevelOnLCD()
+void AutonomousSelector(int btnLCD)
+{
+	writeDebugStreamLine("AutonomousSelector) button: %d", btnLCD);
+
+	bLCDBacklight=true;
+
+	displayBatteryLevelOnLCD(autonomousMode);
+	int autonomousModeValue = autonomousMode;
+
+	int button = 0;
+	while(true)
+	{
+		button = nLCDButtons;
+
+		if (button == 2)
+		{
+			displayBatteryLevelOnLCD(autonomousModeValue);
+
+			bLCDBacklight=false;
+			break;
+		}
+		else if (button == 1)
+		{
+			if (autonomousModeValue > 1)
+			{
+				autonomousModeValue--;
+			}
+
+			DisplayAutonomousMode(autonomousModeValue);
+		}
+		else if (button == 4)
+		{
+			if (autonomousModeValue < 6)
+			{
+				autonomousModeValue++;
+			}
+
+			DisplayAutonomousMode(autonomousModeValue);
+		}
+	}
+
+	bLCDBacklight=false;
+}
+
+void DisplayAutonomousMode(int autonomousModeValue)
+{
+	writeDebugStreamLine("DisplayAutonomousMode) autonomousModeValue: %d", autonomousModeValue);
+
+	clearLCDLine(0);                                            // Clear line 1 (0) of the LCD
+	clearLCDLine(1);                                            // Clear line 2 (1) of the LCD
+
+	string text;
+	//}
+	switch(autonomousModeValue)
+	{
+	case 1:
+		{
+			text = "Left #1 (Shoot)";
+			break;
+		}
+	case 2:
+		{
+			text = "Left #2 (PickUp)";
+			break;
+		}
+	case 3:
+		{
+			text = "Right #1 (Shoot)";
+			break;
+		}
+	case 4:
+		{
+			text = "Right #2 (PickUp)";
+			break;
+		}
+	case 5:
+		{
+			text = "ProgrammingSkill";
+			break;
+		}
+	case 6:
+		{
+			text = "Inspection";
+			break;
+		}
+	}
+
+	//Display the Primary Robot battery voltage
+	// displayLCDString(0, 0, "Autonomous: ");
+	displayLCDString(0, 0, text);
+
+	wait1Msec(500);
+}
+
+void displayBatteryLevelOnLCD(int autonomousModeValue)
+{
+	writeDebugStreamLine("displayBatteryLevelOnLCD) autonomousModeValue: %d", autonomousModeValue);
+
+	clearLCDLine(0);                                            // Clear line 1 (0) of the LCD
+	clearLCDLine(1);                                            // Clear line 2 (1) of the LCD
+
+	autonomousMode = autonomousModeValue;
+
+	string text;
+	sprintf(text, "Selected: %d", autonomousMode); //Build the value to be displayed
+
+	//Display the Primary Robot battery voltage
+	// displayLCDString(0, 0, "Autonomous: ");
+	displayLCDString(0, 0, text);
+
+	wait1Msec(800);
+
+	//while(true)                                                        // An infinite loop to keep the program running until you terminate it
+	//{
+	clearLCDLine(0);                                            // Clear line 1 (0) of the LCD
+	clearLCDLine(1);                                            // Clear line 2 (1) of the LCD
+
+	string mainBattery, externalBattery;
+
+	//Display the Primary Robot battery voltage
+	displayLCDString(0, 0, "Primary: ");
+	sprintf(mainBattery, "%1.2f%c", nImmediateBatteryLevel/1000.0,'V'); //Build the value to be displayed
+	displayNextLCDString(mainBattery);
+
+	//float externalBatteryLevel = SensorValue[ExternalBatteryValue];
+	//Display the Backup battery voltage
+	displayLCDString(1, 0, "External: ");
+	sprintf(externalBattery, "%1.2f%c", (SensorValue[ExternalBatteryValue] * 3.57)/1000.0, 'V');    //Build the value to be displayed
+	displayNextLCDString(externalBattery);
+
+	//Short delay for the LCD refresh rate
+	wait1Msec(500);
+}
+
+void displayBatteryLevelOnLCD_Old()
 {
 	bLCDBacklight=true;
 
@@ -1368,9 +1655,9 @@ task LaunchBall()
 		}
 		else
 		{
-			wait1Msec(50);	
+			wait1Msec(50);
 		}
-		
+
 	}*/
 }
 
@@ -1817,8 +2104,8 @@ task usercontrol()
 		int btnLCD = nLCDButtons;
 		if (btnLCD > 0)
 		{
-			autonomousMode = btnLCD;
-			startTask(displayBatteryLevelOnLCD);
+			AutonomousSelector(btnLCD);
+			// startTask(displayBatteryLevelOnLCD);
 		}
 
 		//int btnLCD = nLCDButtons;
