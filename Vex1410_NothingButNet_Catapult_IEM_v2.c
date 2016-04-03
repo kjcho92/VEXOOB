@@ -85,13 +85,13 @@ GameMode LauncherRange = Long;
 //int LaunchOnly_powerToDown = 83;
 
 int globalWaiter = 175;
-int powerToDown = 75;
+int powerToDown = 79;
 
 int powerToDown_Autonomous = 85;
 int postionToDown = 65;
 int powerToStay = 19;
 
-int powerToLaunch = 91;
+int powerToLaunch = 85;
 int timeToStop = 100;
 
 // int powerToLaunch = 91;
@@ -114,11 +114,11 @@ int positionToStop_LongMid = 35;
 //int powerToLaunch_LongMid = 78;
 //int positionToStop_LongMid = 40;
 
-int powerToLaunch_Mid = 63;
+int powerToLaunch_Mid = 72;
 int positionToStop_Mid = 22;
 
-int powerToLaunch_Short = 35;
-int positionToStop_Short = 23;
+int powerToLaunch_Short = 37;
+int positionToStop_Short = 11;
 
 //int powerToLaunch_Mid = 80;
 //int positionToStop_Mid = 1440;
@@ -206,6 +206,7 @@ task autonomous()
 	//	startTask(StartBelt);
 	//}
 	//else
+	autonomousMode = 2;
 
 	if (autonomousMode == 6)
 	{
@@ -243,7 +244,7 @@ task autonomous()
 		long startTime = nPgmTime;
 
 
-		LaunchBall_Autonomous();
+		// LaunchBall_Autonomous();
 		writeDebugStreamLine("autonomous) Launched Elapsed Time: %d", nPgmTime - startTime);
 
 		PushFirstBalls();
@@ -283,26 +284,12 @@ void PushFirstBalls()
 
 void PushFirstBalls_Left_Gyro()
 {
-
-
 	SensorValue[GyroPosition] = 0;
 	GyroRotate(50, 80);
-
 	wait1Msec(100);
 
-	nMotorEncoder(FrontLeft) = 0;
-	EncoderForBack(80, 1100);
-
-	wait1Msec(500);
-
-	SensorValue[GyroPosition] = 0;
-	GyroRotate(80, 70);
-
-	wait1Msec(500);
-
-	// Push back the first balls
-	nMotorEncoder(FrontLeft) = 0;
-	EncoderForBack(-80, 300);
+	nMotorEncoder(BackRight) = 0;
+	EncoderForBack(80, 1450);
 
 	wait1Msec(500);
 
@@ -311,7 +298,18 @@ void PushFirstBalls_Left_Gyro()
 
 	wait1Msec(500);
 
-	nMotorEncoder(FrontLeft) = 0;
+	// Push back the first balls
+	nMotorEncoder(BackRight) = 0;
+	EncoderForBack(-80, 400);
+
+	wait1Msec(500);
+
+	SensorValue[GyroPosition] = 0;
+	GyroRotate(80, 100);
+
+	wait1Msec(500);
+
+	nMotorEncoder(BackRight) = 0;
 	EncoderForBack(50, 550);
 
 	wait1Msec(500);
@@ -320,27 +318,27 @@ void PushFirstBalls_Left_Gyro()
 	GyroRotate(80, 800);
 
 	wait1Msec(500);
-
+/*
 	startTask(StartBelt);
 
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 	EncoderForBack(60, 460);
 
 	wait1Msec(1000);
 
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 	EncoderForBack(-50, 50);
 
 	wait1Msec(500);
 
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 	EncoderForBack(60, 100);
 
 	wait1Msec(500);
 
 	SensorValue[GyroPosition] = 0;
 	GyroRotate(80, 70);
-
+*/
 
 	/*
 	SensorValue[GyroPosition] = 0;
@@ -355,7 +353,7 @@ void PushFirstBalls_Right_Gyro()
 
 	wait1Msec(100);*/
 
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 	EncoderForBack(80, 800);
 
 	wait1Msec(500);
@@ -366,7 +364,7 @@ void PushFirstBalls_Right_Gyro()
 	wait1Msec(500);
 
 	// Push back the first balls
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 	EncoderForBack(-80, 280);
 
 	wait1Msec(500);
@@ -376,7 +374,7 @@ void PushFirstBalls_Right_Gyro()
 
 	wait1Msec(500);
 
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 	EncoderForBack(50, 600);
 
 	wait1Msec(500);
@@ -388,17 +386,17 @@ void PushFirstBalls_Right_Gyro()
 
 	startTask(StartBelt);
 
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 	EncoderForBack(60, 500);
 
 	wait1Msec(1000);
 
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 	EncoderForBack(-50, 50);
 
 	wait1Msec(500);
 
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 	EncoderForBack(60, 100);
 
 	wait1Msec(500);
@@ -421,14 +419,14 @@ void PickBalls()
 
 void PickBalls_Left_Gyro()
 {
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 	EncoderRotate(-40, 40);
 
 	wait1Msec(100);
 
 	startTask(StartBelt);
 
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 	EncoderForBack(30, 980);
 
 	wait1Msec(100);
@@ -440,44 +438,44 @@ void PickBalls_Left_Gyro()
 
 void PickBalls_Left()
 {
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 	EncoderRotate(-40, 40);
 
 	wait1Msec(100);
 
 	startTask(StartBelt);
 
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 	EncoderForBack(30, 1100);
 
 	wait1Msec(100);
 
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 	EncoderRotate(40, 23);
 }
 
 void PickBalls_Right_IEM()
 {
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 	EncoderRotate(40, 97);
 
 	wait1Msec(100);
 
 	startTask(StartBelt);
 
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 	EncoderForBack(30, 1000);
 
 
 	wait1Msec(100);
 
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 	EncoderRotate(-60, 115);
 	//EncoderRotate(-40, 97);
 
 	//wait1Msec(1500);
 
-	//nMotorEncoder(FrontLeft) = 0;
+	//nMotorEncoder(BackRight) = 0;
 	//EncoderRotate(-40, 140);
 
 	//LauncherRange = LongMid;
@@ -490,36 +488,36 @@ void PickBalls_Right_IEM()
 	//EncoderRotate(-40, 80);
 
 	////ForBackHelper(50);
-	//nMotorEncoder(FrontLeft) = 0;
+	//nMotorEncoder(BackRight) = 0;
 	//EncoderForBack(70, 400);
 	//wait1Msec(100);
 	//SonarRotate(38, 400);
-	////nMotorEncoder(FrontLeft) = 0;
+	////nMotorEncoder(BackRight) = 0;
 	////EncoderRotate(40, 90);
 	//wait1Msec(100);
 	//startTask(StartBelt);
 
-	//nMotorEncoder(FrontLeft) = 0;
+	//nMotorEncoder(BackRight) = 0;
 	//EncoderForBack(30, 650);
 
 }
 
 void PickBalls_Right_Gyro()
 {
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 	EncoderRotate(40, 97);
 
 	wait1Msec(100);
 
 	startTask(StartBelt);
 
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 	EncoderForBack(30, 1000);
 
 
 	wait1Msec(100);
 
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 
 	SensorValue[GyroPosition] = 0;
 	GyroRotate(-60, 280);
@@ -528,21 +526,21 @@ void PickBalls_Right_Gyro()
 
 void PickBalls_Right_NoShoot()
 {
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 	EncoderRotate(40, 97);
 
 	wait1Msec(100);
 
 	startTask(StartBelt);
 
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 	//EncoderForBack(20, 500);
 
 	EncoderForBack(27, 1000);
 
 	wait1Msec(50);
 
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 	EncoderForBack(50, 500);
 
 
@@ -550,19 +548,19 @@ void PickBalls_Right_NoShoot()
 
 void RotateHelper(int power)
 {
-	int adjustedPower = AdjustPowerUsingBatteryLevel(power);
+	int adjustedPower = AdjustPowerUsingBatteryLevel(power) * -1;
 
-	motor[FrontLeft] = adjustedPower;
+	motor[FrontLeft] = -adjustedPower;
 	motor[FrontRight] = -adjustedPower;
 	motor[BackLeft] = adjustedPower;
-	motor[BackRight] = -adjustedPower;
+	motor[BackRight] = adjustedPower;
 }
 
 void EncoderForBack(int power, int distance)
 {
 	//if (power <= 0) return;
 
-	int current = abs(nMotorEncoder(FrontLeft));
+	int current = abs(nMotorEncoder(BackRight));
 	float offset = 0;
 
 	// RED only for programming skill
@@ -577,7 +575,7 @@ void EncoderForBack(int power, int distance)
 		//motor[BackRight] = power;
 		//motor[BackLeft] = power;
 
-		int current = abs(nMotorEncoder(FrontLeft));
+		int current = abs(nMotorEncoder(BackRight));
 
 		offset = current - previous;
 		offset = offset * 1.6;
@@ -590,12 +588,12 @@ void EncoderForBack(int power, int distance)
 
 void ForBackHelper(int power)
 {
-	int adjustedPower = AdjustPowerUsingBatteryLevel(power);
+	int adjustedPower = AdjustPowerUsingBatteryLevel(power) * -1;
 
-	motor[FrontLeft] = -adjustedPower;
-	motor[FrontRight] = adjustedPower;
-	motor[BackLeft] = adjustedPower;
-	motor[BackRight] = -adjustedPower;
+	motor[FrontLeft] = adjustedPower;
+	motor[FrontRight] = -adjustedPower;
+	motor[BackLeft] = -adjustedPower;
+	motor[BackRight] = adjustedPower;
 }
 
 task StartBelt()
@@ -692,8 +690,8 @@ void LaunchBall_Autonomous()
 	motor[Belt] = beltPower;
 
 
-	// for (int i=0;i<=0;)
-	for (int i=0;i<=3;)
+	for (int i=0;i<=0;)
+	// for (int i=0;i<=3;)
 	{
 		Autonomous_AutoLaunchBall_Full_Helper();
 		wait1Msec(200);
@@ -1894,8 +1892,8 @@ void LaunchBall_Helper()
 
 	if ((baseLineSensor - SensorValue[LineBallLoaded]) > lineSensorOffset || ballLoaded == 1)
 	{
-		//wait1Msec(450);
-		wait1Msec(300);
+		wait1Msec(400);
+		// wait1Msec(300);
 
 		if (LauncherRange == ProgrammingSkill)
 		{
@@ -2077,7 +2075,7 @@ void GyroRotate(int power, int distance)
 
 void EncoderRotate(int power, int distance)
 {
-	int current = abs(nMotorEncoder(FrontLeft));
+	int current = abs(nMotorEncoder(BackRight));
 	float offset = 0;
 
 	if (power == 0) return;
@@ -2089,7 +2087,7 @@ void EncoderRotate(int power, int distance)
 
 		RotateHelper(power);
 
-		int current = abs(nMotorEncoder(FrontLeft));
+		int current = abs(nMotorEncoder(BackRight));
 
 		offset = current - previous;
 		offset = offset * 1.6;
@@ -2102,21 +2100,21 @@ void EncoderRotate(int power, int distance)
 void TravelToTheOtherSide_Straight()
 {
 	//wait1Msec(100);
-	//nMotorEncoder(FrontLeft) = 0;
+	//nMotorEncoder(BackRight) = 0;
 	//EncoderForBack(30, 100);
 
 
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 	EncoderRotate(60, 250);
 
 	wait1Msec(100);
-	//nMotorEncoder(FrontLeft) = 0;
+	//nMotorEncoder(BackRight) = 0;
 	//EncoderForBack(-100, 1900);
 	ForBackHelper(30);
 	wait1Msec(350);
 	//wait1Msec(100);
 
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 	EncoderForBack(-100, 2400);
 
 	ForBackHelper(-30);
@@ -2124,7 +2122,7 @@ void TravelToTheOtherSide_Straight()
 
 	StopMoving();
 
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 	EncoderRotate(-60, 50);
 
 }
@@ -2137,7 +2135,7 @@ void TravelToTheOtherSide_New()
 
 	wait1Msec(300);
 
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 	EncoderForBack(-80, 1300);
 
 	EncoderForBack(-40, 1520);
@@ -2161,25 +2159,25 @@ void TravelToTheOtherSide()
 	// Turn right to the center
 
 	//wait1Msec(100);
-	//nMotorEncoder(FrontLeft) = 0;
+	//nMotorEncoder(BackRight) = 0;
 	//EncoderRotate(-50, 38);
 
 	//wait1Msec(100);
 
 	// Move forward
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 	EncoderForBack(50, 1400);
 
 	wait1Msec(1000);
 
 	// Turn left to the other side
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 	EncoderRotate(50, 290);
 
 	wait1Msec(1000);
 
 	// Move backward
-	nMotorEncoder(FrontLeft) = 0;
+	nMotorEncoder(BackRight) = 0;
 	EncoderForBack(-60, 1090);
 
 
@@ -2333,7 +2331,7 @@ task usercontrol()
 
 			wait1Msec(300);
 
-			nMotorEncoder(FrontLeft) = 0;
+			nMotorEncoder(BackRight) = 0;
 			EncoderForBack(-80, 1300);
 
 			EncoderForBack(-40, 1520);
@@ -2614,7 +2612,7 @@ task AutoLaunchBall_Full()
 	motor[Belt] = 0;
 
 
-	beltPower = 80;
+	beltPower = 92;
 
 	// if (LauncherRange == ProgrammingSkill)
 	// {
@@ -2630,7 +2628,7 @@ task AutoLaunchBall_Full()
 		//while(true)
 	{
 		AutoLaunchBall_Full_Helper();
-		wait1Msec(200);
+		wait1Msec(350);
 		i++;
 	}
 
@@ -2808,8 +2806,8 @@ void AutoLaunchBall_Full_Helper()
 	if (SensorValue[BallLoaded] == 1 || (baseLineSensor - SensorValue[LineBallLoaded]) > lineSensorOffset || ballLoaded == 1)
 	{
 		//wait1Msec(450);
-		wait1Msec(300);
-
+		wait1Msec(350);
+		// wait1Msec(390);
 
 		if (LauncherRange == Near || LauncherRange == Middle)
 		{
@@ -3014,6 +3012,38 @@ startTask(LauncherStop);
 */
 
 task AutoLaunchBall()
+//void AutoLaunchBall_Full()
+{
+	long startTime = nPgmTime;
+
+	int beltPower = 110;
+	beltPower = AdjustPowerUsingBatteryLevel(beltPower);
+	motor[Belt] = -beltPower;
+
+	wait1Msec(250);
+	motor[Belt] = 0;
+
+
+	beltPower = 80;
+
+	// if (LauncherRange == ProgrammingSkill)
+	// {
+	// 	beltPower = 100;
+	// }
+
+	beltPower = AdjustPowerUsingBatteryLevel(beltPower);
+
+	motor[Belt] = beltPower;
+
+	AutoLaunchBall_Full_Helper();
+
+	wait1Msec(500);
+	motor[Belt] = 0;
+
+	writeDebugStreamLine("AutoLaunchBall) Launched Elapsed Time: %d", nPgmTime - startTime);
+}
+
+void TOChange_AutoLaunchBall()
 {
 	//int power = motor[Launcher1];
 
