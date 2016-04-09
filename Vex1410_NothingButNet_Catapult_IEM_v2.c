@@ -92,7 +92,8 @@ int postionToDown = 65;
 int powerToStay = 19;
 
 int powerToLaunch = 88;
-int timeToStop = 100;
+int timeToStop = 80;
+int positionToStop = 24;
 
 // int powerToLaunch = 91;
 // int timeToStop = 85;
@@ -110,6 +111,7 @@ int powerToLaunch_ProgrammingSkill = 76;
 
 int powerToLaunch_LongMid = 80;
 int positionToStop_LongMid = 35;
+int timeToStop_LongMid = 80;
 
 //int powerToLaunch_LongMid = 78;
 //int positionToStop_LongMid = 40;
@@ -1076,6 +1078,55 @@ task LauncherUp()
 
 void LauncherUp_Helper()
 { // Timer
+	startTask(LauncherStop);
+	// LauncherStop_Helper();
+
+	int originalPower = powerToLaunch + powerOffset;
+	int originalPower_external = powerToLaunch + powerOffset;
+
+	//int local_positionToStop = positionToStop;
+
+	int primaryPower = AdjustPowerUsingBatteryLevel(originalPower) * -1;
+	int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower_external) * -1;
+	// writeDebugStreamLine("LauncherUp) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
+
+	nMotorEncoder(Launcher4) = 0;
+	clearTimer(T1);
+
+	motor[Launcher1] = externalPower;
+	motor[Launcher2] = externalPower;
+	motor[Launcher3] = primaryPower;
+	motor[Launcher4] = primaryPower;
+
+	clearTimer(T1);
+	while(time1[T1] < timeToStop)
+	{
+	}
+	//writeDebugStreamLine("LauncherUp) launcherPosition #1: %d", abs(nMotorEncoder(Launcher4)));
+
+	//while(abs(nMotorEncoder(Launcher4)) < local_positionToStop && time1[T1] < 1000)
+	//{
+	//}
+
+	// writeDebugStreamLine("LauncherUp) launcherPosition #1: %d", abs(nMotorEncoder(Launcher4)));
+
+	//int extPower = 20;
+	//motor[Launcher1] = extPower;
+	//motor[Launcher2] = extPower;
+	//motor[Launcher3] = extPower;
+	//motor[Launcher4] = extPower;
+	//wait1Msec(70);
+
+	//startTask(LauncherStop);
+	// LauncherStop_Helper();
+	startTask(LauncherStop);
+	// LauncherStop_Helper();
+	// writeDebugStreamLine("LauncherUp) launcherPosition #2: %d", abs(nMotorEncoder(Launcher4)));
+
+}
+
+void LauncherUp_Helper_Worked()
+{ // Timer
 	//startTask(LauncherStop);
 	LauncherStop_Helper();
 
@@ -1256,6 +1307,48 @@ task LauncherUp_ProgrammingSkill()
 }
 
 task LauncherUp_LongMid_Global()
+{
+	startTask(LauncherStop);
+
+	int originalPower = powerToLaunch_LongMid;
+	int originalPower_external = powerToLaunch_LongMid;
+	// int local_positionToStop = positionToStop_LongMid;
+
+	if (LauncherRange == Autonomous)
+	{
+		originalPower = powerToLaunch_Autonomous;
+		originalPower_external = powerToLaunch_Autonomous;
+		// local_positionToStop = positionToStop_LongMid;
+
+	}
+
+	int primaryPower = AdjustPowerUsingBatteryLevel(originalPower) * -1;
+	int externalPower = AdjustPowerUsingExternalBatteryLevel(originalPower_external) * -1;
+	writeDebugStreamLine("LauncherUp_Autonomous) primaryPower:%d,  externalPower: %d", primaryPower, externalPower);
+
+	nMotorEncoder(Launcher4) = 0;
+	clearTimer(T1);
+
+	motor[Launcher1] = externalPower;
+	motor[Launcher2] = externalPower;
+	motor[Launcher3] = primaryPower;
+	motor[Launcher4] = primaryPower;
+
+	while(time1[T1] < timeToStop_LongMid)
+	{
+	}
+
+	//int extPower = 20;
+	//motor[Launcher1] = extPower;
+	//motor[Launcher2] = extPower;
+	//motor[Launcher3] = extPower;
+	//motor[Launcher4] = extPower;
+	//wait1Msec(70);
+
+	startTask(LauncherStop);
+}
+
+task LauncherUp_LongMid_Global_WORKED()
 {
 	startTask(LauncherStop);
 
