@@ -116,11 +116,11 @@ int timeToStop_LongMid = 80;
 //int powerToLaunch_LongMid = 78;
 //int positionToStop_LongMid = 40;
 
-int powerToLaunch_Mid = 72;
-int positionToStop_Mid = 22;
+int powerToLaunch_Mid = 71;
+int positionToStop_Mid = 23;
 
-int powerToLaunch_Short = 51;
-int positionToStop_Short = 18;
+int powerToLaunch_Short = 52;
+int positionToStop_Short = 19;
 
 //int powerToLaunch_Mid = 80;
 //int positionToStop_Mid = 1440;
@@ -308,17 +308,17 @@ void PushFirstBalls_Left_Gyro()
 	wait1Msec(500);
 
 	SensorValue[GyroPosition] = 0;
-	GyroRotate(80, 220);
+	GyroRotate(80, 160);
 
 	wait1Msec(500);
 
 	nMotorEncoder(BackRight) = 0;
-	EncoderForBack(50, 500);
+	EncoderForBack(50, 550);
 
 	wait1Msec(500);
 
 	SensorValue[GyroPosition] = 0;
-	GyroRotate(80, 800);
+	GyroRotate(80, 750);
 
 	wait1Msec(500);
 
@@ -340,7 +340,7 @@ void PushFirstBalls_Left_Gyro()
 	wait1Msec(500);
 
 	SensorValue[GyroPosition] = 0;
-	GyroRotate(80, 100);
+	GyroRotate(80, 250);
 
 
 	/*
