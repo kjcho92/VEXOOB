@@ -2621,16 +2621,20 @@ void StopOrReverseBelt()
 {
 
 	wait1Msec(200);
-	int power = motor[Belt];
+	int power = abs(motor[Belt]);
 
-	if (power != 0)
+	if (power > 50)
 	{
 		StopBelt();
 	}
-	else
+	else if (power > 30)
 	{
 		motor[Belt] = -80;
-		wait1Msec(150);
+	}
+	else
+	{
+		motor[Belt] = -45;
+		// wait1Msec(150);
 	}
 }
 
